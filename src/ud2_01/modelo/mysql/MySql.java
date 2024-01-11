@@ -9,8 +9,10 @@ import java.sql.ResultSet;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import ud2_01.modelo.mysql.dml.Delete;
 import ud2_01.modelo.mysql.dml.Insert;
 import ud2_01.modelo.mysql.dml.Select;
+import ud2_01.modelo.mysql.dml.Update;
 
 /**
  *
@@ -56,7 +58,7 @@ public class MySql {
     //OPERACIONES
     
     public ResultSet select(String tabla){
-        return new Select().select(conexion, tabla);
+        return new Select().selectAll(conexion, tabla);
     }
     public ResultSet select(String tabla,String campo,String valor){
         return new Select().selectWhere(conexion, tabla,campo,valor);
@@ -64,5 +66,13 @@ public class MySql {
     
     public int insert(String tabla,String[] campos,String[] valores){
         return new Insert().insert(conexion, tabla,campos,valores);
+    }
+
+    public int delete(String tabla, String campo, String valor) {
+        return new Delete().deleteWhere(conexion,tabla,campo,valor);
+    }
+
+    public int update(String tabla, String[] campos, String[] valores, String campo, String valor) {
+        return new Update().updateWhere(conexion, tabla,campos,valores,campo,valor);
     }
 }

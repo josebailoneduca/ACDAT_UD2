@@ -36,7 +36,7 @@ public class Select {
         }
     }
  
-    public ResultSet select(Connection c, String tabla){        
+    public ResultSet selectAll(Connection c, String tabla){        
         PreparedStatement ps; 
         try{
             ps = c.prepareStatement("SELECT * FROM "+tabla);

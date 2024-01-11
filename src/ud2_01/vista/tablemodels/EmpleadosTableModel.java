@@ -17,7 +17,7 @@ import ud2_01.controlador.dto.Empleado;
  */
 public class EmpleadosTableModel extends AbstractTableModel{
     private List<Empleado> empleados;
-    private String[]columnas={"ID","Nombre","DNI","Sueldo"};
+    private String[]columnas={"ID","Nombre","Apellidos","DNI","Sueldo"};
     
     public EmpleadosTableModel(List<Empleado>empleados) {
         this.empleados = empleados;
@@ -41,8 +41,9 @@ public class EmpleadosTableModel extends AbstractTableModel{
         switch (columnIndex) {
             case 0 ->{ return e.getID();}
             case 1 ->{ return e.getNombre();}
-            case 2 ->{ return e.getDNI();}
-            case 3 ->{ return e.getSueldo();}
+            case 2 ->{ return e.getApellidos();}
+            case 3 ->{ return e.getDNI();}
+            case 4 ->{ return e.getSueldo();}
             default -> throw new AssertionError();
         }
     }
@@ -53,7 +54,8 @@ public class EmpleadosTableModel extends AbstractTableModel{
             case 0 ->{ return Integer.class;}
             case 1 ->{ return String.class;}
             case 2 ->{ return String.class;}
-            case 3 ->{ return Double.class;}
+            case 3 ->{ return String.class;}
+            case 4 ->{ return Double.class;}
             default -> throw new AssertionError();
         }    }
 

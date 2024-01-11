@@ -103,15 +103,18 @@
         <Component class="javax.swing.JButton" name="btnInsert">
           <Properties>
             <Property name="text" type="java.lang.String" value="Insertar"/>
+            <Property name="actionCommand" type="java.lang.String" value="insertar"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JButton" name="btnDelete">
           <Properties>
             <Property name="text" type="java.lang.String" value="Eliminar"/>
+            <Property name="actionCommand" type="java.lang.String" value="eliminar"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JButton" name="btnEdit">
           <Properties>
+            <Property name="actionCommand" type="java.lang.String" value="editar"/>
             <Property name="label" type="java.lang.String" value="Editar"/>
           </Properties>
         </Component>

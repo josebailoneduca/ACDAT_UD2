@@ -4,16 +4,20 @@ LICENCIA JOSE JAVIER BO
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
 Lista de paquetes:
  */
-package ud2_01.vista;
+package ud2_01.vista.venatana;
 
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.TableRowSorter;
 import ud2_01.controlador.Controlador;
+import ud2_01.controlador.dto.Empleado;
+import ud2_01.vista.Texto;
+import ud2_01.vista.dialogos.FormularioEmpleado;
 import ud2_01.vista.listeners.VentanaListener;
 import ud2_01.vista.tablemodels.EmpleadosTableModel;
 
@@ -24,7 +28,8 @@ import ud2_01.vista.tablemodels.EmpleadosTableModel;
 public class Ventana extends javax.swing.JFrame {
 
     private VentanaListener listener;
-    public boolean filtroPorDni=true;
+    public boolean filtroPorDni = true;
+
     /**
      * Creates new form Ventana
      */
@@ -32,8 +37,8 @@ public class Ventana extends javax.swing.JFrame {
         initComponents();
         eventos();
         configTablaEmpleados();
-        actualizarEmpleados();
     }
+
     private void eventos() {
         this.listener = new VentanaListener(this);
         miSalir.addActionListener(listener);
@@ -46,6 +51,7 @@ public class Ventana extends javax.swing.JFrame {
         rbSueldo.addActionListener(listener);
         inputFiltro.addKeyListener(listener);
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -89,11 +95,14 @@ public class Ventana extends javax.swing.JFrame {
         panelCrud.setLayout(new java.awt.GridLayout(4, 1, 0, 10));
 
         btnInsert.setText("Insertar");
+        btnInsert.setActionCommand("insertar");
         panelCrud.add(btnInsert);
 
         btnDelete.setText("Eliminar");
+        btnDelete.setActionCommand("eliminar");
         panelCrud.add(btnDelete);
 
+        btnEdit.setActionCommand("editar");
         btnEdit.setLabel("Editar");
         panelCrud.add(btnEdit);
 
@@ -163,7 +172,6 @@ public class Ventana extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
- 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar barraMenu;
@@ -187,20 +195,23 @@ public class Ventana extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     public void salir() {
-        if (confirmar("¿Desea salir?"))
+        if (confirmar("¿Desea salir?")) {
             Controlador.salir();
+        }
     }
 
-
-    private boolean confirmar(String msg){
-        int respuesta = JOptionPane.showConfirmDialog(this, msg,"", JOptionPane.YES_NO_OPTION);
+    private boolean confirmar(String msg) {
+        int respuesta = JOptionPane.showConfirmDialog(this, msg, "", JOptionPane.YES_NO_OPTION);
         return respuesta == JOptionPane.YES_OPTION;
     }
 
     private void configTablaEmpleados() {
         EmpleadosTableModel etm = new EmpleadosTableModel(Controlador.empleados);
         tablaEmpleados.setModel(etm);
-        
+
+        //permitir solo seleccionar 1 fila
+        tablaEmpleados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
         //crear sorter
         TableRowSorter<EmpleadosTableModel> rowSorter = new TableRowSorter<>(etm);
         tablaEmpleados.setRowSorter(rowSorter);
@@ -209,9 +220,9 @@ public class Ventana extends javax.swing.JFrame {
         List<RowSorter.SortKey> sortKeys = new ArrayList<>();
         sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
         rowSorter.setSortKeys(sortKeys);
-        
+
     }
-    
+
     private void actualizarTablaEmpleados() {
         //actualizar los datos de la tabla 
         try {
@@ -220,30 +231,73 @@ public class Ventana extends javax.swing.JFrame {
         } catch (ClassCastException ex) {
         }
     }
-    
-    public void filtrar(){
+
+    public void filtrar() {
         //seleccionar columna de filtro
-        int indiceFiltro=2;
-        if (!filtroPorDni)
-            indiceFiltro=3;
+        int indiceFiltro = 3;
+        if (!filtroPorDni) {
+            indiceFiltro = 4;
+        }
         RowFilter<EmpleadosTableModel, Integer> rf = RowFilter.regexFilter(inputFiltro.getText(), indiceFiltro);
-        
+
         TableRowSorter<EmpleadosTableModel> rs = (TableRowSorter<EmpleadosTableModel>) tablaEmpleados.getRowSorter();
         rs.setRowFilter(rf);
         tablaEmpleados.getSelectionModel().clearSelection();
-}
+    }
 
     public void actualizarEmpleados() {
         Controlador.actualizarEmpleados();
-       actualizarTablaEmpleados();
+        actualizarTablaEmpleados();
     }
 
     public void msgError(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    public void msgInfo(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     public void quitarFiltro() {
         inputFiltro.setText("");
         filtrar();
+    }
+
+    public void eliminar() {
+        int idSeleccionada = getIdEmpleadoSeleccionado();
+        if (idSeleccionada == -1) {
+            msgInfo(Texto.SELECCIONE_EMPLEADO);
+        } else if (confirmar(Texto.DESEA_ELIMINAR_EMPLEADO) && Controlador.eliminar(idSeleccionada) != -1) {
+            msgInfo(Texto.EMPLEADO_ELIMINADO);
+            actualizarEmpleados();
+        }
+    }
+
+    private int getIdEmpleadoSeleccionado() {
+        int idEmpleado = -1;
+        int filaSeleccionada = tablaEmpleados.getSelectedRow();
+        if (filaSeleccionada != -1) {
+            idEmpleado = (int) tablaEmpleados.getValueAt(filaSeleccionada, 0);
+        }
+        return idEmpleado;
+    }
+
+    public void editar() {
+        int idEmpleado = getIdEmpleadoSeleccionado();
+
+        if (idEmpleado == -1) {
+            msgInfo(Texto.SELECCIONE_EMPLEADO);
+            return;
+        }
+        Empleado empleado = Controlador.getEmpleado(idEmpleado);
+
+        if (empleado == null) {
+            msgInfo(Texto.EMPLEADO_NO_EXISTE);
+            return;
+        }
+        
+        FormularioEmpleado fe = new FormularioEmpleado(this, FormularioEmpleado.EDITAR, empleado);
+        fe.setLocationRelativeTo(this);
+        fe.setVisible(true);
     }
 }

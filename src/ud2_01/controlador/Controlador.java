@@ -11,10 +11,8 @@ import ud2_01.controlador.dto.Empleado;
 import ud2_01.modelo.mysql.MySql;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import ud2_01.vista.Texto;
-import ud2_01.vista.Ventana;
+import ud2_01.vista.venatana.Ventana;
 
 /**
  *
@@ -32,6 +30,7 @@ public class Controlador {
     private static String baseDatos = "trabajosempleados";
     private static String tabla = "empleados";
     private static String[] columnas = {"ID", "nombre", "apellidos", "DNI", "sueldo"};
+    private static String[] columnasInsercion = {"nombre", "apellidos", "DNI", "sueldo"};
 
     public static void salir() {
         System.exit(0);
@@ -97,6 +96,7 @@ public class Controlador {
                 vista = new Ventana();
                 vista.setLocationRelativeTo(null);
                 vista.setVisible(true);
+                vista.actualizarEmpleados();
             }
         });
     }
@@ -116,6 +116,43 @@ public class Controlador {
         String apellidos = rs.getString("apellidos");
         String DNI = rs.getString("DNI");
         double sueldo = rs.getDouble("sueldo");
-        return new Empleado(ID, nombre, DNI, sueldo);
+        return new Empleado(ID, nombre, apellidos, DNI, sueldo);
+    }
+
+    public static int eliminar(int id) {
+        conectar();
+        int resultado = modelo.delete(tabla, "ID", "" + id);
+        modelo.desconectar();
+        return resultado;
+    }
+
+    public static int insertar(Empleado empleado) {
+        conectar();
+        String[] valores = {empleado.getNombre(), empleado.getApellidos(), empleado.getDNI(), "" + empleado.getSueldo()};
+        int resultado = modelo.insert(tabla, columnasInsercion, valores);
+        modelo.desconectar();
+        return resultado;
+    }
+
+    public static int update(Empleado empleado) {
+        String[] valores = {empleado.getNombre(), empleado.getApellidos(), empleado.getDNI(), "" + empleado.getSueldo()};
+        return modelo.update(tabla,columnasInsercion,valores,"ID",""+empleado.getID());
+    }
+
+    public static Empleado getEmpleado(int id) {
+        conectar();
+        try {
+        ResultSet rs = modelo.select(tabla, "ID", "" + id);
+            if (rs.next()) {
+                return crearEmpleadoDeResultSet(rs);
+            } else {
+                return null;
+            }
+        } catch (SQLException ex) {
+            return null;
+        }finally{
+        modelo.desconectar();
+        }
+        
     }
 }

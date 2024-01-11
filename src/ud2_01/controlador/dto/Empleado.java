@@ -14,12 +14,14 @@ package ud2_01.controlador.dto;
 public class Empleado {
     private int ID;
     private String nombre;
+    private String apellidos;
     private String DNI;
     private double sueldo;
 
-    public Empleado(int ID, String nombre, String DNI, double sueldo) {
+    public Empleado(int ID, String nombre, String apellidos, String DNI, double sueldo) {
         this.ID = ID;
         this.nombre = nombre;
+        this.apellidos=apellidos;
         this.DNI = DNI;
         this.sueldo = sueldo;
     }
@@ -45,6 +47,13 @@ public class Empleado {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
     }
 
     public String getDNI() {

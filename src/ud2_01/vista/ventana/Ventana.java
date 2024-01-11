@@ -4,7 +4,7 @@ LICENCIA JOSE JAVIER BO
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
 Lista de paquetes:
  */
-package ud2_01.vista.venatana;
+package ud2_01.vista.ventana;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,17 +17,27 @@ import javax.swing.table.TableRowSorter;
 import ud2_01.controlador.Controlador;
 import ud2_01.controlador.dto.Empleado;
 import ud2_01.vista.Texto;
-import ud2_01.vista.dialogos.FormularioEmpleado;
+import ud2_01.vista.dialogos.DialogoFormularioEmpleado;
 import ud2_01.vista.listeners.VentanaListener;
 import ud2_01.vista.tablemodels.EmpleadosTableModel;
 
 /**
+ * Ventana principal. Punto de entrada hacia la vista. Ademas de tener lo
+ * esencial para controlar la interfaz grafica tiene metodos para lanzar
+ * jOptionPane de error e informacion.
+ *
+ * Los elementos son escuchados por VentanaListener y luego se ejecutan metodos
+ * de esta misma ventana.
  *
  * @author Jose Javier BO
+ * @see VentanaListener
  */
 public class Ventana extends javax.swing.JFrame {
 
+    //Listener de los elementos de la ventana
     private VentanaListener listener;
+
+    //Modo actual del filtro de la tabla. True es por DNI, False es por sueldo
     public boolean filtroPorDni = true;
 
     /**
@@ -39,17 +49,228 @@ public class Ventana extends javax.swing.JFrame {
         configTablaEmpleados();
     }
 
+    /**
+     * Configura la asignacion de listener
+     */
     private void eventos() {
+        //listener
         this.listener = new VentanaListener(this);
+
+        //botones
         miSalir.addActionListener(listener);
         btnInsert.addActionListener(listener);
         btnDelete.addActionListener(listener);
         btnEdit.addActionListener(listener);
         btnRefresh.addActionListener(listener);
         btnQuitarFiltro.addActionListener(listener);
+
+        //radio buttons
         rbDni.addActionListener(listener);
         rbSueldo.addActionListener(listener);
+
+        //teclas en el campo de filtro
         inputFiltro.addKeyListener(listener);
+    }
+
+    /**
+     * Configuracion inicial de la tabla de empleados. El Tablemodel estara
+     * vinculado con el array de Empleados de controlador. Tiene establecido un
+     * tableshorter y limitada la seleccion a una sola fila
+     */
+    private void configTablaEmpleados() {
+        EmpleadosTableModel etm = new EmpleadosTableModel(Controlador.empleados);
+        tablaEmpleados.setModel(etm);
+
+        //permitir solo seleccionar 1 fila
+        tablaEmpleados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        //crear sorter
+        TableRowSorter<EmpleadosTableModel> rowSorter = new TableRowSorter<>(etm);
+        tablaEmpleados.setRowSorter(rowSorter);
+
+        //ordenacion por defecto inicial
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+        rowSorter.setSortKeys(sortKeys);
+
+    }
+
+    /**
+     * Actualiza el contenido de la tabla de empleados
+     */
+    private void actualizarTablaEmpleados() {
+        //actualizar los datos de la tabla 
+        try {
+            EmpleadosTableModel etm = (EmpleadosTableModel) tablaEmpleados.getModel();
+            etm.fireTableDataChanged();
+        } catch (ClassCastException ex) {
+        }
+    }
+
+    /**
+     * Actualiza el filtrado de la tabla
+     */
+    public void filtrar() {
+        //seleccionar columna de filtro (3 dni, 4 sueldo)
+        int indiceFiltro = 3;
+        if (!filtroPorDni) {
+            indiceFiltro = 4;
+        }
+
+        //generar un filtro acorde a los parametros del inputFiltro y la columna
+        RowFilter<EmpleadosTableModel, Integer> rf = RowFilter.regexFilter(inputFiltro.getText(), indiceFiltro);
+        TableRowSorter<EmpleadosTableModel> rs = (TableRowSorter<EmpleadosTableModel>) tablaEmpleados.getRowSorter();
+        rs.setRowFilter(rf);
+
+        //eliminar la posible seleccion que hubiera en la tabla
+        tablaEmpleados.getSelectionModel().clearSelection();
+    }
+
+    /**
+     * Pide a controlador que recarge los empleados de la base de datos y lanza
+     * el refrescro de la tabla
+     */
+    public void actualizarEmpleados() {
+        Controlador.actualizarEmpleados();
+        actualizarTablaEmpleados();
+    }
+
+    /**
+     * Vacia el campo de texto del filtro y lo actualiza en tabla
+     */
+    public void quitarFiltro() {
+        inputFiltro.setText("");
+        filtrar();
+    }
+
+    /**
+     * Elimina el empleado seleccionado en la tabla. Recoge la id del empleado y
+     * pide a controlador que lo elimine.
+     */
+    public void eliminar() {
+
+        //recoger id del empleado
+        int idSeleccionada = getIdEmpleadoSeleccionado();
+        if (idSeleccionada == -1) {
+            msgInfo(Texto.SELECCIONE_EMPLEADO);
+            return;
+        }
+
+        //comprobar si existe en la base de datos
+        Empleado empleado = Controlador.getEmpleado(idSeleccionada);
+        if (empleado == null) {
+            msgInfo(Texto.EMPLEADO_NO_EXISTE);
+            return;
+        }
+
+        //Pedir confirmacion al usuario
+        boolean confirmado = confirmar(Texto.DESEA_ELIMINAR_EMPLEADO + " (" + empleado.getID() + ") " + empleado.getNombre() + " " + empleado.getApellidos() + "?");
+
+        //ordenar a controlador la eliminacion
+        if (confirmado && Controlador.eliminar(idSeleccionada) != -1) {
+            msgInfo(Texto.EMPLEADO_ELIMINADO);
+            actualizarEmpleados();
+        }
+    }
+
+    /**
+     * Devuelve la id del empleado seleccionado en la tabla
+     *
+     * @return La id del empleado
+     */
+    private int getIdEmpleadoSeleccionado() {
+        int idEmpleado = -1;
+        int filaSeleccionada = tablaEmpleados.getSelectedRow();
+        if (filaSeleccionada != -1) {
+            idEmpleado = (int) tablaEmpleados.getValueAt(filaSeleccionada, 0);
+        }
+        return idEmpleado;
+    }
+
+    /**
+     * Inicia la edicion de un empleado. Recoge la id del empleado seleccionado
+     * en la tabla. Usando ese ID pide a controlador que lo recoga de la base de
+     * datos Usando ese empleado recogido abre el DialogoFormularioEmpleado el
+     * cual se encarga del resto. Una vez se cierra el dialogo actualiza los
+     * empleados.
+     *
+     * @see DialogoFormularioEmpleado
+     */
+    public void editar() {
+        //id del empleado
+        int idEmpleado = getIdEmpleadoSeleccionado();
+
+        if (idEmpleado == -1) {
+            msgInfo(Texto.SELECCIONE_EMPLEADO);
+            return;
+        }
+
+        //empleado que hay en BD
+        Empleado empleado = Controlador.getEmpleado(idEmpleado);
+
+        if (empleado == null) {
+            msgInfo(Texto.EMPLEADO_NO_EXISTE);
+            return;
+        }
+
+        //abrir dialogo de edicion
+        DialogoFormularioEmpleado fe = new DialogoFormularioEmpleado(this, DialogoFormularioEmpleado.EDITAR, empleado);
+        fe.setLocationRelativeTo(this);
+        fe.setVisible(true);
+
+        //actualizar tabla
+        actualizarEmpleados();
+    }
+
+    /**
+     * Genera el DialogoFormularioEmpleado para insertar un nuevo empleado. El
+     * dialogo se encarga del resto. Una vez el dialogo se cierra se actualiza
+     * la tabla de empleados
+     *
+     * @see DialogoFormularioEmpleado
+     */
+    public void insertar() {
+        DialogoFormularioEmpleado fe = new DialogoFormularioEmpleado(this, DialogoFormularioEmpleado.CREAR, null);
+        fe.setLocationRelativeTo(this);
+        fe.setVisible(true);
+        actualizarEmpleados();
+    }
+
+    /**
+     * Confirma si se desea salir del programa. Si el usuario lo afirma pide a
+     * controlador que cierre el programa
+     */
+    public void salir() {
+        if (confirmar("¿Desea salir?")) {
+            Controlador.salir();
+        }
+    }
+
+    /**
+     * Muestra un mensaje de error
+     * @param msg  El mensaje
+     */
+    public void msgError(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Muestra un mensaje de informacion
+     * @param msg  El mensaje
+     */
+    public void msgInfo(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Muestra un mensaje de confirmacion
+     *
+     * @param msg El mensaje a mostrar
+     * @return True si ha pulsado SI. False si ha pulsado NO
+     */
+    private boolean confirmar(String msg) {
+        int respuesta = JOptionPane.showConfirmDialog(this, msg, "", JOptionPane.YES_NO_OPTION);
+        return respuesta == JOptionPane.YES_OPTION;
     }
 
     /**
@@ -194,110 +415,4 @@ public class Ventana extends javax.swing.JFrame {
     private javax.swing.JTable tablaEmpleados;
     // End of variables declaration//GEN-END:variables
 
-    public void salir() {
-        if (confirmar("¿Desea salir?")) {
-            Controlador.salir();
-        }
-    }
-
-    private boolean confirmar(String msg) {
-        int respuesta = JOptionPane.showConfirmDialog(this, msg, "", JOptionPane.YES_NO_OPTION);
-        return respuesta == JOptionPane.YES_OPTION;
-    }
-
-    private void configTablaEmpleados() {
-        EmpleadosTableModel etm = new EmpleadosTableModel(Controlador.empleados);
-        tablaEmpleados.setModel(etm);
-
-        //permitir solo seleccionar 1 fila
-        tablaEmpleados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        //crear sorter
-        TableRowSorter<EmpleadosTableModel> rowSorter = new TableRowSorter<>(etm);
-        tablaEmpleados.setRowSorter(rowSorter);
-
-        //ordenacion por defecto inicial
-        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-        rowSorter.setSortKeys(sortKeys);
-
-    }
-
-    private void actualizarTablaEmpleados() {
-        //actualizar los datos de la tabla 
-        try {
-            EmpleadosTableModel etm = (EmpleadosTableModel) tablaEmpleados.getModel();
-            etm.fireTableDataChanged();
-        } catch (ClassCastException ex) {
-        }
-    }
-
-    public void filtrar() {
-        //seleccionar columna de filtro
-        int indiceFiltro = 3;
-        if (!filtroPorDni) {
-            indiceFiltro = 4;
-        }
-        RowFilter<EmpleadosTableModel, Integer> rf = RowFilter.regexFilter(inputFiltro.getText(), indiceFiltro);
-
-        TableRowSorter<EmpleadosTableModel> rs = (TableRowSorter<EmpleadosTableModel>) tablaEmpleados.getRowSorter();
-        rs.setRowFilter(rf);
-        tablaEmpleados.getSelectionModel().clearSelection();
-    }
-
-    public void actualizarEmpleados() {
-        Controlador.actualizarEmpleados();
-        actualizarTablaEmpleados();
-    }
-
-    public void msgError(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-    public void msgInfo(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    public void quitarFiltro() {
-        inputFiltro.setText("");
-        filtrar();
-    }
-
-    public void eliminar() {
-        int idSeleccionada = getIdEmpleadoSeleccionado();
-        if (idSeleccionada == -1) {
-            msgInfo(Texto.SELECCIONE_EMPLEADO);
-        } else if (confirmar(Texto.DESEA_ELIMINAR_EMPLEADO) && Controlador.eliminar(idSeleccionada) != -1) {
-            msgInfo(Texto.EMPLEADO_ELIMINADO);
-            actualizarEmpleados();
-        }
-    }
-
-    private int getIdEmpleadoSeleccionado() {
-        int idEmpleado = -1;
-        int filaSeleccionada = tablaEmpleados.getSelectedRow();
-        if (filaSeleccionada != -1) {
-            idEmpleado = (int) tablaEmpleados.getValueAt(filaSeleccionada, 0);
-        }
-        return idEmpleado;
-    }
-
-    public void editar() {
-        int idEmpleado = getIdEmpleadoSeleccionado();
-
-        if (idEmpleado == -1) {
-            msgInfo(Texto.SELECCIONE_EMPLEADO);
-            return;
-        }
-        Empleado empleado = Controlador.getEmpleado(idEmpleado);
-
-        if (empleado == null) {
-            msgInfo(Texto.EMPLEADO_NO_EXISTE);
-            return;
-        }
-        
-        FormularioEmpleado fe = new FormularioEmpleado(this, FormularioEmpleado.EDITAR, empleado);
-        fe.setLocationRelativeTo(this);
-        fe.setVisible(true);
-    }
 }

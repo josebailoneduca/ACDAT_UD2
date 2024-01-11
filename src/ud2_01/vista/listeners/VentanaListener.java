@@ -10,57 +10,62 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import ud2_01.vista.dialogos.FormularioEmpleado;
-import ud2_01.vista.venatana.Ventana;
+import ud2_01.vista.ventana.Ventana;
 
 /**
- *
+ *  Listener de pulsado de botones y teclas
+ * 
+ * 
  * @author Jose Javier Bailon Ortiz
  */
 public class VentanaListener implements ActionListener, KeyListener {
 
-    Ventana ventana;
+    //Referencia a la ventana
+    private Ventana ventana;
 
+    /**
+     * Constructor
+     * 
+     * @param ventana Referencia a la ventana principal
+     */
     public VentanaListener(Ventana ventana) {
         this.ventana = ventana;
     }
 
+    
+    /**
+     * Ejectua una accion dependiendo del action command del evernto recibido
+     * Los elementos de la interfaz tienen especificado el action command para
+     * funcionar en concordancia con este switch
+     * @param e 
+     */
     @Override
     public void actionPerformed(ActionEvent e) {
         String ac = e.getActionCommand();
 
         switch (ac) {
-            case "salir":
-                ventana.salir();
-                break;
-            case "actualizar":
-                ventana.actualizarEmpleados();
-                break;
-            case "insertar":
-                FormularioEmpleado fe = new FormularioEmpleado(ventana, FormularioEmpleado.CREAR, null);
-                fe.setLocationRelativeTo(ventana);
-                fe.setVisible(true);
-                ventana.actualizarEmpleados();
-                break;
-                
-            case "editar":
-                ventana.editar();
-                break;
-            case "eliminar":
-                ventana.eliminar();
-                break;
-
-            case "quitarfiltro":
-                ventana.quitarFiltro();
-                break;
-            case "dni":
+            //Salir del programa
+            case "salir" -> ventana.salir();
+            //Actualizar empleados en memoria
+            case "actualizar" -> ventana.actualizarEmpleados();
+            //Iniciar la insercion de un nuevo empleado
+            case "insertar" -> ventana.insertar();
+            //Iniciar la edicion de un empleado 
+            case "editar" -> ventana.editar();
+            //Iniciar el borrado de un empleado
+            case "eliminar" -> ventana.eliminar();
+            //Quitar el filtro actual de la tabla
+            case "quitarfiltro" -> ventana.quitarFiltro();
+            //Seleccionar el modo de filtro por DNI
+            case "dni" -> {
                 ventana.filtroPorDni = true;
                 ventana.filtrar();
-                break;
-            case "sueldo":
+            }
+            //Seleccionar el modo de filtro por sueldo
+            case "sueldo" -> {
                 ventana.filtroPorDni = false;
                 ventana.filtrar();
-                break;
+            }
         }
 
     }
@@ -73,6 +78,10 @@ public class VentanaListener implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {
     }
 
+    /**
+     * Actualizar el filtrado conforme se escribe
+     * @param e 
+     */
     @Override
     public void keyReleased(KeyEvent e) {
         ventana.filtrar();

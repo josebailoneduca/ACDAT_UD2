@@ -8,7 +8,8 @@ Lista de paquetes:
 package ud2_01.vista;
 
 /**
- *
+ * Conjunto de textos usados para los mensajes
+ * 
  * @author Jose Javier Bailon Ortiz
  */
 public class Texto {
@@ -17,8 +18,8 @@ public class Texto {
     public static String ERROR_ACTUALIZANDO="Error actualizando los empleados";
     public static String SELECCIONE_EMPLEADO="Debe seleccionar un empleado";
     public static String EMPLEADO_ELIMINADO="Se ha eliminado el empleado";
-    public static String DESEA_ELIMINAR_EMPLEADO="¿Desea eliminar el empleado?";
-    public static String ERROR_NOMBRE_APELLIDOS_VACIO="El nombre y los apellidos no puede estar vacío";
+    public static String DESEA_ELIMINAR_EMPLEADO="¿Desea eliminar el empleado";
+    public static String ERROR_NOMBRE_APELLIDOS_VACIO="El nombre y los apellidos no pueden estar vacíos";
     public static String ERROR_FORMATO_DNI="El formato de DNI no es correcto. Debe tener 9 caracteres";
     public static String ERROR_INSERTANDO_EMPLEADO="No se ha podido insertar el empleado. Es posible que el DNI este ya usado";
     public static String ERROR_ACTUALIZANDO_EMPLEADO="No se ha podido actualizar el empleado";

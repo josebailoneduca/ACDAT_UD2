@@ -12,7 +12,7 @@ import javax.swing.table.AbstractTableModel;
 import ud2_01.controlador.dto.Empleado;
 
 /**
- *
+ * Table model para la tabla de empleados
  * @author Jose Javier Bailon Ortiz
  */
 public class EmpleadosTableModel extends AbstractTableModel{

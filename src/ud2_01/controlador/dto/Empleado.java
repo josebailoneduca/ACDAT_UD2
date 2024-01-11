@@ -8,7 +8,8 @@ Lista de paquetes:
 package ud2_01.controlador.dto;
 
 /**
- *
+ * DTO de empleado
+ * 
  * @author Jose Javier Bailon Ortiz
  */
 public class Empleado {
@@ -18,6 +19,15 @@ public class Empleado {
     private String DNI;
     private double sueldo;
 
+    
+    /**
+     * Constructor completo
+     * @param ID
+     * @param nombre
+     * @param apellidos
+     * @param DNI
+     * @param sueldo 
+     */
     public Empleado(int ID, String nombre, String apellidos, String DNI, double sueldo) {
         this.ID = ID;
         this.nombre = nombre;
@@ -26,6 +36,10 @@ public class Empleado {
         this.sueldo = sueldo;
     }
 
+    /**
+     * Constructor solo con la ID
+     * @param ID 
+     */
     public Empleado(int ID) {
         this.ID = ID;
         this.nombre="";
@@ -33,6 +47,9 @@ public class Empleado {
         this.sueldo=0;
     }
 
+    
+    //GETTERS Y SETTERS
+    
     public int getID() {
         return ID;
     }

@@ -1,5 +1,5 @@
 /*
- *  LICENCIA ADRIÁN PR
+ *  LICENCIA Jose Javier BO
  *  Aquí: nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt para cambiar la licencia.
  *  Aquí: nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java para editar el tipo de plantilla.  
  *  Lista de paquetes:
@@ -7,27 +7,36 @@
 
 package ud2_01.modelo.mysql.dml;
 
- /*
-    Los siguientes import ponerlos manualmente porque 
-    quizás no los detecte Netbeans de forma automática
-*/
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.swing.JOptionPane;
 
 /**
- * Consultar
+ * DLM para hacer select en la base de datos. Tiene opcion de hacer un SELECT * y un SELECT * WHERE
  */
 public class Select {
+    
+    //ultimo error producido
     private String ultimoError="";
-    public  ResultSet selectWhere(Connection c, String tabla, String campo, String valor){        
+    
+    
+    /**
+     * Ejecuta un SELECT * WHERE campo=valor
+     * 
+     * @param c Conexion
+     * @param tabla Nombre de la tabla
+     * @param campoClave Nombre del campo en el WHERE
+     * @param valorClave Valor del campo en el WHERE
+     * 
+     * @return  El resultset fruto de la consulta
+     */
+    public  ResultSet selectWhere(Connection c, String tabla, String campoClave, String valorClave){        
         PreparedStatement ps; 
         try{
            //Preparamos la sentencia
-           ps = c.prepareStatement("SELECT * FROM "+tabla+" WHERE "+campo+"=?");
-           ps.setString(1, valor);
+           ps = c.prepareStatement("SELECT * FROM "+tabla+" WHERE "+campoClave+"=?");
+           ps.setString(1, valorClave);
            //Ejecutamos
            return ps.executeQuery();
         }catch(SQLException e){
@@ -36,6 +45,13 @@ public class Select {
         }
     }
  
+    
+    /**
+     * Ejecuta un SELECT *
+     * @param c Conexion
+     * @param tabla Nombre de la table
+     * @return  El resultset fruto de la consulta
+     */
     public ResultSet selectAll(Connection c, String tabla){        
         PreparedStatement ps; 
         try{

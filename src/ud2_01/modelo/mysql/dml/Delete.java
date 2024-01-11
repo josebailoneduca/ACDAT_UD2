@@ -1,5 +1,5 @@
 /*
- *  LICENCIA ADRIÁN PR
+ *  LICENCIA Jose Javier BO
  *  Aquí: nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt para cambiar la licencia.
  *  Aquí: nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java para editar el tipo de plantilla.  
  *  Lista de paquetes:
@@ -8,31 +8,39 @@
 package ud2_01.modelo.mysql.dml;
 
  
-/*
-    Los siguientes import ponerlos manualmente porque 
-    quizás no los detecte Netbeans de forma automática
-*/
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 
 /**
- * Consultar
- * @author Adrián PR
+ * DML para borrar registros
+ * 
+ * @author Jose Javier Bailon Ortiz
  */
 public class Delete {
  
+    //ultimo error producido
     private String ultimoError="";
     
-    public int deleteWhere(Connection c, String tabla, String campo,String valor){        
+    
+    /**
+     * Borra un registro usando la conexion C de la tabla especificada 
+     * WHERE campo = valor
+     * 
+     * @param c Conexion
+     * @param tabla Tabla a usar
+     * @param campoClave Nombre del campo de la setntencia WHERE
+     * @param valorClave Valor del campo de la sentencia WHERE
+     * 
+     * @return Cantidad de filas modificadas o -1 si hay algun error
+     */
+    public int deleteWhere(Connection c, String tabla, String campoClave,String valorClave){        
         PreparedStatement ps; 
         try{
-            String sql="DELETE FROM "+tabla+" WHERE "+campo+"=?";
+            String sql="DELETE FROM "+tabla+" WHERE "+campoClave+"=?";
             ps = c.prepareStatement(sql);
-            ps.setString(1, valor);
+            ps.setString(1, valorClave);
            return ps.executeUpdate();
         }catch(SQLException e){
             ultimoError = e.getMessage();

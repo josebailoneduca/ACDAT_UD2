@@ -73,6 +73,6 @@ public class MySql {
     }
 
     public int update(String tabla, String[] campos, String[] valores, String campo, String valor) {
-        return new Update().updateWhere(conexion, tabla,campos,valores,campo,valor);
+        //return new Update().updateWhere(conexion, tabla,campos,valores,campo,valor);
     }
 }

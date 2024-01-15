@@ -78,8 +78,13 @@ public class Insert {
             //EJECUTAR LA SENTENCIA
            return ps.executeUpdate();
         }catch(SQLException e){
+            int ec=e.getErrorCode();
             ultimoError = e.getMessage();
-            return -1;//error
+            //si es error 1062  es por DNI duplicado
+            if (ec==1062)
+                return -2;
+            else 
+                return 1;
         }//end catch        
     }//end insertar
 }//end Consultar

@@ -38,7 +38,7 @@ public class DialogoFormularioEmpleado extends javax.swing.JDialog implements Ac
     public static int CREAR = 1;
 
     //Modo actual
-    private int modo;
+    private final int modo;
 
     //Empleado siendo creado o modificado
     Empleado empleado;
@@ -65,7 +65,6 @@ public class DialogoFormularioEmpleado extends javax.swing.JDialog implements Ac
 
         //crear referencia a la ventana
         ventana = (Ventana) getParent();
-
         //configura el modo del formulario
         configurarModo();
     }
@@ -120,11 +119,11 @@ public class DialogoFormularioEmpleado extends javax.swing.JDialog implements Ac
      * Valida los valores, genera un objeto empleado actualizado y luego actua
      * dependiendo del modo:
      *
-     * -Modo EDITAR: Ejecuta el update en el controlador
-     * -Modo CREAR: Ejecuta Insertar en el controlador
+     * -Modo EDITAR: Ejecuta el update en el controlador -Modo CREAR: Ejecuta
+     * Insertar en el controlador
      */
     private void guardar() {
-        
+
         //recoger valores del formulario
         String nombre = inputNombre.getText();
         String apellidos = inputApellidos.getText();
@@ -136,7 +135,7 @@ public class DialogoFormularioEmpleado extends javax.swing.JDialog implements Ac
             ventana.msgError(Texto.ERROR_NOMBRE_APELLIDOS_VACIO);
             return;
         }
-        
+
         //validacion de DNI
         if (DNI.length() != 9) {
             ventana.msgError(Texto.ERROR_FORMATO_DNI);
@@ -152,19 +151,23 @@ public class DialogoFormularioEmpleado extends javax.swing.JDialog implements Ac
         //MODO CREAR
         if (modo == CREAR) {
             //Si no ha podido insertar avisa al usuario
-            if (Controlador.insertar(empleado) == -1) {
+            int resultado = Controlador.insertar(empleado);
+            if (resultado == -1) {
                 ventana.msgError(Texto.ERROR_INSERTANDO_EMPLEADO);
-            //si ha podido insertar cierra el dialogo
+            } else if (resultado == -2) {
+                ventana.msgError(Texto.ERROR_INSERTANDO_EMPLEADO_DNI);
+
+                //si ha podido insertar cierra el dialogo
             } else {
                 dispose();
             }
 
-        //MODO EDITAR
+            //MODO EDITAR
         } else if (Controlador.update(empleado) == -1) {
             //si no ha podido hacer el update avisa al usuario
             ventana.msgError(Texto.ERROR_ACTUALIZANDO_EMPLEADO);
         } else {
-            
+
             //si ha podido hacer el update cierra el dialogo
             dispose();
         }

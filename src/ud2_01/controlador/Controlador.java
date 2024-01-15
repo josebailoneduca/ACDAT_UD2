@@ -29,18 +29,18 @@ public class Controlador {
     private static Ventana vista;
 
     //Lista de empleados en memoria
-    public static ArrayList<Empleado> empleados = new ArrayList<Empleado>();
+    public static ArrayList<Empleado> empleados = new ArrayList<>();
 
     //Datos de conexion a la base de datos
-    private static String host = "localhost";
-    private static int puerto = 3306;
-    private static String usuario = "root";
-    private static String password = "";
-    private static String baseDatos = "trabajosempleados";
-    private static String tabla = "empleados";
+    private static final String HOST = "localhost";
+    private static final int PUERTO = 3306;
+    private static final String USUARIO = "root";
+    private static final String PASSWORD = "";
+    private static final String BASE_DATOS = "trabajosempleados";
+    private static final String TABLA = "empleados";
 
     //Columnas usadas durante la insercion y el update
-    private static String[] columnasInsercion = {"nombre", "apellidos", "DNI", "sueldo"};
+    private static final String[] columnasInsercion = {"nombre", "apellidos", "DNI", "sueldo"};
 
     /**
      * Salir del programa
@@ -63,7 +63,7 @@ public class Controlador {
         if (conectar()) {
 
             //recoger todos los empleados
-            ResultSet rs = modelo.select(tabla);
+            ResultSet rs = modelo.select(TABLA);
 
             if (rs != null) {
                 //si hay resulset
@@ -107,7 +107,7 @@ public class Controlador {
     public static Empleado getEmpleado(int id) {
         if (conectar()) {
             try {
-                ResultSet rs = modelo.select(tabla, "ID", "" + id);
+                ResultSet rs = modelo.select(TABLA, "ID", "" + id);
                 if (rs != null && rs.next()) {
                     return crearEmpleadoDeResultSet(rs);
                 } else {
@@ -133,7 +133,7 @@ public class Controlador {
      */
     public static int eliminar(int id) {
         if (conectar()) {
-            int resultado = modelo.delete(tabla, "ID", "" + id);
+            int resultado = modelo.delete(TABLA, "ID", "" + id);
             modelo.desconectar();
             return resultado;
         } else {
@@ -152,7 +152,7 @@ public class Controlador {
         int resultado = -1;
         if (conectar()) {
             String[] valores = {empleado.getNombre(), empleado.getApellidos(), empleado.getDNI(), "" + empleado.getSueldo()};
-            resultado = modelo.insert(tabla, columnasInsercion, valores);
+            resultado = modelo.insert(TABLA, columnasInsercion, valores);
             modelo.desconectar();
         }
         return resultado;
@@ -168,7 +168,7 @@ public class Controlador {
         int resultado = -1;
         if (conectar()) {
             String[] valores = {empleado.getNombre(), empleado.getApellidos(), empleado.getDNI(), "" + empleado.getSueldo()};
-            resultado = modelo.update(tabla, columnasInsercion, valores, "ID", "" + empleado.getID());
+            resultado = modelo.update(TABLA, columnasInsercion, valores, "ID", "" + empleado.getID());
             modelo.desconectar();
         }
         return resultado;
@@ -176,13 +176,13 @@ public class Controlador {
 
     
     
-        /**
+      /**
      * Ordena al modelo que se conecte a la base de datos
      *
      * @return True si ha conectado. False si no ha conectado
      */
     private static boolean conectar() {
-        if (modelo.conectar(host, puerto, usuario, password, baseDatos)) {
+        if (modelo.conectar()) {
             return true;
         } else {
             vista.msgError(Texto.ERROR_CONEXION);
@@ -219,7 +219,8 @@ public class Controlador {
     public static void main(String[] args) {
 
         //CREAR EL MODLEO
-        modelo = new MySql();
+        modelo = new MySql(HOST, PUERTO, USUARIO, PASSWORD, BASE_DATOS);
+                
 
         //CREAR LA VISTA
         /* Set the Nimbus look and feel */
@@ -235,32 +236,21 @@ public class Controlador {
 
                 }
             }
-        } catch (ClassNotFoundException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(Ventana.class
                     .getName()).log(java.util.logging.Level.SEVERE, null, ex);
 
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Ventana.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Ventana.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Ventana.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                vista = new Ventana();
-                vista.setLocationRelativeTo(null);
-                vista.setVisible(true);
-                vista.actualizarEmpleados();
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            vista = new Ventana();
+            vista.setLocationRelativeTo(null);
+            vista.setVisible(true);
+            vista.actualizarEmpleados();
         });
     }
 }

@@ -28,19 +28,30 @@ public class MySql {
 
     //ultimo error producido
     private String ultimoError = "";
+    
+    //datos de conexion
+    String host;
+    int puerto;
+    String user;
+    String password;
+    String baseDatos;
 
+    public MySql(String host, int puerto, String user, String password, String baseDatos) {
+        this.host = host;
+        this.puerto = puerto;
+        this.user = user;
+        this.password = password;
+        this.baseDatos = baseDatos;
+    }
+    
+    
+    
     /**
      * Conecta con la base MYSQL de datos usando los parametros suministrados
      *
-     * @param host
-     * @param puerto
-     * @param user
-     * @param password
-     * @param baseDatos
-     *
      * @return True si conecta. False si no conecta
      */
-    public boolean conectar(String host, int puerto, String user, String password, String baseDatos) {
+    public boolean conectar() {
         //peparar url
         String url = "jdbc:mysql://" + host + ":" + puerto + "/";
 
@@ -119,7 +130,7 @@ public class MySql {
      * @param tabla Nombre de la tabla
      * @param campos Listado de nombres de columnas
      * @param valores Listado de valores
-     * @return 1 si ha insertado -1 si no ha insertado
+     * @return 1 si ha insertado -1 si no ha insertado y -2 si no ha insertado por ser DNI duplicado
      */
     public int insert(String tabla, String[] campos, String[] valores) {
         return new Insert().insert(conexion, tabla, campos, valores);

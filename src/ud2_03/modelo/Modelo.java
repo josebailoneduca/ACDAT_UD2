@@ -34,19 +34,10 @@ public class Modelo {
     //ultimo error producido
     private String ultimoError = "";
 
-    //datos de conexion
-    String host;
-    int puerto;
-    String user;
-    String password;
-    String baseDatos;
 
-    public Modelo(String host, int puerto, String user, String password, String baseDatos) {
-        this.host = host;
-        this.puerto = puerto;
-        this.user = user;
-        this.password = password;
-        this.baseDatos = baseDatos;
+
+    public Modelo() {
+
     }
 
     /**
@@ -54,13 +45,8 @@ public class Modelo {
      *
      * @return True si conecta. False si no conecta
      */
-    public boolean conectar() {
-        //peparar url
-        String url = "jdbc:mysql://" + host + ":" + puerto + "/";
-
-        //nombre del driver
-        String driver = "com.mysql.cj.jdbc.Driver";
-
+    public boolean conectar(String driver, String url, String user, String password, String baseDatos) {
+  
         try {
             //asegurar carga del driver
             Class.forName(driver);//Nombre del driver

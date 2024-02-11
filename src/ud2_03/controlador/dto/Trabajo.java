@@ -41,16 +41,13 @@ public class Trabajo {
     }
 
 
-
     
-    // GETTERS / SETTERS
-    public int getId() {
-        return ID;
+    public Trabajo( String nombre, String descripcion) {
+        this.ID = 0;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
     }
-
-    public void setId(int ID) {
-        this.ID = ID;
-    }
+ 
 
     public String getNombre() {
         return nombre;

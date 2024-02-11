@@ -19,7 +19,7 @@ public class EmpleadosTableModel extends AbstractTableModel {
 
     //ATRIBUTOS:
     private List<Empleado> listaEmpleados;//lista actual de empleados
-    private String[] columnas = new String[]{"ID", "Nombre", "Apellidos", "DNI", "Sueldo"};
+    private String[] columnas;
 
     //METODOS:
     //Constructor

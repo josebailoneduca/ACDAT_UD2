@@ -80,11 +80,14 @@ public class Insert {
         }catch(SQLException e){
             int ec=e.getErrorCode();
             ultimoError = e.getMessage();
-            //si es error 1062  es por DNI duplicado
+            //si es error 1062  es por clave duplicada
             if (ec==1062)
                 return -2;
+            //sies error de foreing key no existente
+            if (ec==1452)
+                return -3;
             else 
-                return 1;
+                return -1;
         }//end catch        
     }//end insertar
 }//end Consultar

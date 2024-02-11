@@ -45,7 +45,7 @@ CREATE TABLE `trabajos` (
 --
 INSERT INTO `trabajos` (`nombre`, `descripcion`) VALUES ('T1', 'Ayuntamiento');
 INSERT INTO `trabajos` (`nombre`, `descripcion`) VALUES ('T2', 'Banco');
-INSERT INTO `trabajos` (`nombre`, `descripcion`) VALUES ('T13', 'EmpresaPrivada');
+INSERT INTO `trabajos` (`nombre`, `descripcion`) VALUES ('T3', 'EmpresaPrivada');
 
 
 

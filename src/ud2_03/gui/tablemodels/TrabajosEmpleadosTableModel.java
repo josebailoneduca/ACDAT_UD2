@@ -8,30 +8,30 @@ package ud2_03.gui.tablemodels;
 
  import java.util.List;
 import javax.swing.table.AbstractTableModel;
-import ud2_03.controlador.dto.Trabajo;
+import ud2_03.controlador.dto.TrabajoEmpleado;
  
 /**
  * Tablemodel para la tabla de  trabajos
  * 
  * @author Jose Javier Bailon Ortiz
  */
-public class TrabajosTableModel extends AbstractTableModel {
+public class TrabajosEmpleadosTableModel extends AbstractTableModel {
 
     //ATRIBUTOS:
-    private List<Trabajo> listaTrabajos;//lista actual de trabajos
+    private List<TrabajoEmpleado> listaTrabajosEmpleados;//lista actual de trabajosempleados
      private String[] columnas;
     
 
     //METODOS:
     //Constructor
-    public TrabajosTableModel(List<Trabajo> listaTrabajos, String[] columnas) {
-        this.listaTrabajos = listaTrabajos;
+    public TrabajosEmpleadosTableModel(List<TrabajoEmpleado> listaTrabajosEmpleados, String[] columnas) {
+        this.listaTrabajosEmpleados = listaTrabajosEmpleados;
         this.columnas=columnas;
     }
 
     @Override
     public int getRowCount() {
-        return this.listaTrabajos.size();
+        return this.listaTrabajosEmpleados.size();
     }
 
     @Override
@@ -44,13 +44,13 @@ public class TrabajosTableModel extends AbstractTableModel {
         Object value = null;
         switch (columnIndex) {
             case 0:
-                value = listaTrabajos.get(rowIndex).getID();
+                value = listaTrabajosEmpleados.get(rowIndex).getID();
                 break;
             case 1:
-                value = listaTrabajos.get(rowIndex).getNombre();
+                value = listaTrabajosEmpleados.get(rowIndex).getIDtrabajo();
                 break;
             case 2:
-                value = listaTrabajos.get(rowIndex).getDescripcion();
+                value = listaTrabajosEmpleados.get(rowIndex).getIDempleado();
                 break;
             default:
                 value = null;

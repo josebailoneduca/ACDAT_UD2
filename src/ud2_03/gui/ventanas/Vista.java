@@ -8,7 +8,6 @@ package ud2_03.gui.ventanas;
 
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.ButtonModel;
@@ -24,82 +23,91 @@ import ud2_03.controlador.dto.Empleado;
 import ud2_03.gui.tablemodels.EmpleadosTableModel;
 import ud2_03.gui.tablemodels.TrabajosTableModel;
 import ud2_03.controlador.Controlador;
+import ud2_03.controlador.dto.TrabajoEmpleado;
+import ud2_03.gui.tablemodels.TrabajosEmpleadosTableModel;
 
 /**
  *
  * @author Jose Javier BO
  */
-public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectionListener {
+public class Vista extends javax.swing.JFrame implements ListSelectionListener {
 
     //ATRIBUTOS
     private Trabajo trabajoSiendoEditado = null;
     private Empleado empleadoSiendoEditado = null;
     private boolean operacionesActivadas = false;
-    private String[] columnasTrabajo=null;
     private Controlador controlador=null;
+    
+    private Autodesconexion autodesconexion;
     /**
      * Creates new form VentanaPrincipal
      */
-    public VentanaPrincipal(Controlador controlador) {
-        this.controlador=controlador;
-        initComponents();
-        initPropio();
-        
+    public Vista() {
     }
 
+    public void setControlador(Controlador controlador){
+        this.controlador=controlador;
+        initComponents();
+        CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
+        cl.show(panelCardsGeneral, "panelDesconectado");
+        autodesconexion=new Autodesconexion(this);
+        autodesconexion.start();
+    }
 //###############################################################
 //<editor-fold defaultstate="collapsed" desc="INICIALIZACION">
-   
-    /**
-     * Inicializar estado inicial: 
-     * -Inicializar tablas 
-     * -Limpieza formulario
-     */
-    private void initPropio() {
-        inicializarTablaTrabajos();
-        inicializarTablaEmpleadosDeTrabajo();
-        inicializarTablaTodosEmpleados();
-        resetearFormNuevoTrabajo();
-    }
+ 
 
     /**
      * Inicializa la tabla de trabajos conformando su modelo e introduciendo los datos
      * necesarios
      */
     private void inicializarTablaTrabajos() {
-//        //crear modelo
-//        TrabajosTableModel ttm = new TrabajosTableModel(Controlador.getTrabajos(), Controlador.getColumnasTrabajos());
-//        //establecer el modelo como modelo de la tabla
-//        //TODO DESCOMENTAR this.tblTrabajos.setModel(ttm);
-//
-//        //crear sorter
-//        TableRowSorter<TrabajosTableModel> rowSorter = new TableRowSorter<>(ttm);
-//        this.tblTrabajos.setRowSorter(rowSorter);
-//
-//        //ordenacion por defecto inicial
-//        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-//        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-//        rowSorter.setSortKeys(sortKeys);
-//
-//        //listener de seleccion de fila
-//        this.tblTrabajos.getSelectionModel().addListSelectionListener(this);
+        
+        ArrayList<Trabajo> listaTrabajos = new ArrayList<Trabajo>();
+        controlador.getAll(1).stream().forEach((t) -> {listaTrabajos.add((Trabajo)t);});
+        
+        //crear modelo
+        TrabajosTableModel ttm = new TrabajosTableModel(listaTrabajos, controlador.getColumnas(1));
+        //establecer el modelo como modelo de la tabla
+        this.tblTrabajos.setModel(ttm);
+
+        //crear sorter
+        TableRowSorter<TrabajosTableModel> rowSorter = new TableRowSorter<>(ttm);
+        this.tblTrabajos.setRowSorter(rowSorter);
+
+        //ordenacion por defecto inicial
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+        rowSorter.setSortKeys(sortKeys);
+
+        //listener de seleccion de fila
+        this.tblTrabajos.getSelectionModel().addListSelectionListener(this);
     }
     
-    /**
-     * Actualiza la tabla de trabajos
-     */
-    private void actualizarTablaTrabajos() {
-        //actualizar los datos de la tabla
-        TrabajosTableModel etm = (TrabajosTableModel) tblTrabajos.getModel();
-        etm.fireTableDataChanged();
-    }
+  
 
     /**
      * Establece un modelo preliminar para la tabla de empleados de un trabajo
      */
-    private void inicializarTablaEmpleadosDeTrabajo() {
+    private void inicializarTablaEmpleadosDeTrabajo(int idTrabajo) {
+        ArrayList<TrabajoEmpleado> listaTrabajosEmpleados = new ArrayList<TrabajoEmpleado>();
+        controlador.getTuplas(2, 1, ""+idTrabajo).stream().forEach((t) -> {listaTrabajosEmpleados.add((TrabajoEmpleado)t);});
+        //crear modelo
+        TrabajosEmpleadosTableModel tetm = new TrabajosEmpleadosTableModel(listaTrabajosEmpleados, controlador.getColumnas(2));
+        //establecer el modelo como modelo de la tabla
+        this.tblTrabajosEmpleados.setModel(tetm);
+
+        //crear sorter
+        TableRowSorter<TrabajosEmpleadosTableModel> rowSorter = new TableRowSorter<>(tetm);
+        this.tblTrabajosEmpleados.setRowSorter(rowSorter);
+
+        //ordenacion por defecto inicial
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+        rowSorter.setSortKeys(sortKeys);
+
         //listener de seleccion de fila
-        this.tblEmpleadosDeTrabajo.getSelectionModel().addListSelectionListener(this);
+        this.tblTrabajosEmpleados.getSelectionModel().addListSelectionListener(this);
     }
 
     /**
@@ -107,33 +115,27 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      * necesarios
      */
     private void inicializarTablaTodosEmpleados() {
-//        //crear modelo
-//        EmpleadosTableModel etm = new EmpleadosTableModel(Controlador.getEmpleados(), Controlador.getColumnasEmpleados());
-//        //establecer el modelo como modelo de la tabla
-//        this.tblTodosEmpleados.setModel(etm);
-//
-//        //crear sorter
-//        TableRowSorter<EmpleadosTableModel> rowSorter = new TableRowSorter<>(etm);
-//        this.tblTodosEmpleados.setRowSorter(rowSorter);
-//
-//        //ordenacion por defecto inicial
-//        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-//        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-//        rowSorter.setSortKeys(sortKeys);
-//
-//        //listener de seleccion de fila
-//        this.tblTodosEmpleados.getSelectionModel().addListSelectionListener(this);
+        ArrayList<Empleado> listaEmpleados = new ArrayList<Empleado>();
+        controlador.getAll(0).stream().forEach((t) -> {listaEmpleados.add((Empleado)t);});
+        //crear modelo
+        EmpleadosTableModel etm = new EmpleadosTableModel(listaEmpleados, controlador.getColumnas(0));
+        //establecer el modelo como modelo de la tabla
+        this.tblEmpleados.setModel(etm);
+
+        //crear sorter
+        TableRowSorter<EmpleadosTableModel> rowSorter = new TableRowSorter<>(etm);
+        this.tblEmpleados.setRowSorter(rowSorter);
+
+        //ordenacion por defecto inicial
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+        rowSorter.setSortKeys(sortKeys);
+
+        //listener de seleccion de fila
+        this.tblEmpleados.getSelectionModel().addListSelectionListener(this);
 
     }
-
-    /**
-     * Actualiza la tabla de todos los empleados
-     */
-    private void actualizarTablaTodosEmpleados() {
-        //actualizar los datos de la tabla
-        EmpleadosTableModel etm = (EmpleadosTableModel) tblTodosEmpleados.getModel();
-        etm.fireTableDataChanged();
-    }
+ 
 
 //</editor-fold>
 //########################################################################
@@ -163,6 +165,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      * @param evt 
      */
     private void miEmpleadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miEmpleadosActionPerformed
+        inicializarTablaTodosEmpleados();
         CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
         cl.show(panelCardsGeneral, "panelGeneralEmpleados");
         habilitarFiltrado();
@@ -202,12 +205,13 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      * @param evt 
      */
     private void btnGuardarTrabajoNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarTrabajoNuevoActionPerformed
-        int id = Integer.parseInt(lbIdTrabajo.getText());
+
         String nombre = inputNombreTrabajo.getText();
         String descripcion = inputDescripcionTrabajo.getText();
         if (nombre.length() > 0) {
-            Controlador.addTrabajo(new Trabajo(id, nombre,descripcion));
-            this.actualizarTablaTrabajos();
+            String[] valores={nombre,descripcion};
+            controlador.insert(1,valores);
+            this.inicializarTablaTrabajos();
             resetearFormNuevoTrabajo();
         }
     }//GEN-LAST:event_btnGuardarTrabajoNuevoActionPerformed
@@ -219,54 +223,39 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      * Inicia la edicion de un trabajo
      * @param id Id del trabajo
      */
-    private void editarTrabajo(int id) {
+    private void editarEmpleadosTrabajo(int idTrabajo) {
 
-        this.trabajoSiendoEditado = Controlador.getTrabajo(id);
+        this.trabajoSiendoEditado = (Trabajo)controlador.getTupla(1,idTrabajo);
         if (trabajoSiendoEditado == null) {
             return;
         }
 
         CardLayout cl = (CardLayout) this.panelAccionesTrabajos.getLayout();
         cl.show(panelAccionesTrabajos, "panelGestionEmpleadosTrabajo");
-        //TODO get empleados de trabajo
-        //rellenarTablaEmpleadosDeTrabajo(trabajoSiendoEditado.getEmpleados());
-        lbNombreTrabajo.setText(trabajoSiendoEditado.getNombre());
+        inicializarTablaEmpleadosDeTrabajo(idTrabajo);
+        lbNombreTrabajo.setText(trabajoSiendoEditado.getNombre()+" - "+trabajoSiendoEditado.getDescripcion());
 
     }
 
-    /**
-     * Actualiza la tabla conformando su modelo e introduciendo los datos
-     * necesarios
-     */
-    private void rellenarTablaEmpleadosDeTrabajo(ArrayList<Empleado> empleados) {
-        
-        //TODO DESCOMENTAR
-//        //crear modelo
-//        EmpleadosTableModel etm = new EmpleadosTableModel(empleados, columnas);
-//        //establecer el modelo como modelo de la tabla
-//        this.tblEmpleadosDeTrabajo.setModel(etm);
-//
-//        //crear sorter
-//        TableRowSorter<EmpleadosTableModel> rowSorter = new TableRowSorter<>(etm);
-//        this.tblEmpleadosDeTrabajo.setRowSorter(rowSorter);
-//
-//        //ordenacion por defecto inicial
-//        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-//        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-//        rowSorter.setSortKeys(sortKeys);
-    }
+    
+    private void editarTrabajo(int id) {
 
-    /**
-     * Actualiza la informacion de la tabla de empleados de un trabajo
-     */
-    private void actualizarTablaEmpleadosDeTrabajos() {
-        //actualizar los datos de la tabla 
-        try {
-            EmpleadosTableModel etm = (EmpleadosTableModel) tblEmpleadosDeTrabajo.getModel();
-            etm.fireTableDataChanged();
-        } catch (ClassCastException ex) {
+        this.trabajoSiendoEditado = (Trabajo)controlador.getTupla(1,id);
+        if (trabajoSiendoEditado == null) {
+            return;
         }
+
+        CardLayout cl = (CardLayout) this.panelAccionesTrabajos.getLayout();
+        cl.show(panelAccionesTrabajos, "panelEditarTrabajo");
+        this.lbEditarIdTrabajo.setText(""+trabajoSiendoEditado.getID());
+        this.inputEditarNombreTrabajo.setText(trabajoSiendoEditado.getNombre());
+        this.inputEditarDescripcionTrabajo.setText(trabajoSiendoEditado.getDescripcion());
+        this.btnGuardarTrabajoNuevo.setEnabled(false);
     }
+    
+ 
+
+ 
 
     /**
      * Recoge el trabajo seleccionado en la tabla de trabajos y si hay alguno seleccionado
@@ -280,7 +269,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         }        //Hace conversion segun el modelo de tabla
         int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
         int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
-        editarTrabajo(idTrabajo);
+        editarEmpleadosTrabajo(idTrabajo);
 
     }//GEN-LAST:event_btnGestionarEmpleadosActionPerformed
 
@@ -290,15 +279,16 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      * @param evt 
      */
     private void btnDesasignarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDesasignarActionPerformed
-        int filaSeleccionada = this.tblEmpleadosDeTrabajo.getSelectedRow();
+        int filaSeleccionada = this.tblTrabajosEmpleados.getSelectedRow();
         if (filaSeleccionada == -1) {
             return;//no hacer nada si no hay fila seleccionada
         }        //Hace conversion segun el modelo de tabla
-        int filaCorrecta = this.tblEmpleadosDeTrabajo.convertRowIndexToModel(filaSeleccionada);
-        int idEmpleado = (int) this.tblEmpleadosDeTrabajo.getModel().getValueAt(filaCorrecta, 0);
-        Controlador.desasignarEmpleadoDeTrabajo(idEmpleado, this.trabajoSiendoEditado.getID());
-        this.actualizarTablaEmpleadosDeTrabajos();
-        this.actualizarTablaTrabajos();
+        int filaCorrecta = this.tblTrabajosEmpleados.convertRowIndexToModel(filaSeleccionada);
+        int idTupla = (int) this.tblTrabajosEmpleados.getModel().getValueAt(filaCorrecta, 0);
+        int idTrabajo =(int) this.tblTrabajosEmpleados.getModel().getValueAt(filaCorrecta, 1);
+        controlador.delete(2, ""+idTupla);
+        inicializarTablaEmpleadosDeTrabajo(idTrabajo);
+        
     }//GEN-LAST:event_btnDesasignarActionPerformed
 //</editor-fold>
 
@@ -333,17 +323,19 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      * Habilita o deshabilita el filtrado en función de si hay o no empleados
      */
     private void habilitarFiltrado(){
-        if (Controlador.getEmpleados().size()>0){
-            for (Component c : panelFiltros.getComponents()){
-                c.setEnabled(true);
-            }
-            if (busqueda.getText().length()==0)
-                btnBuscarFiltro.setEnabled(false);
-        }else{
-            for (Component c : panelFiltros.getComponents()){
-                c.setEnabled(false);
-            }
-        }
+        
+        //TODO manejar filtrado
+//        if (Controlador.getEmpleados().size()>0){
+//            for (Component c : panelFiltros.getComponents()){
+//                c.setEnabled(true);
+//            }
+//            if (busqueda.getText().length()==0)
+//                btnBuscarFiltro.setEnabled(false);
+//        }else{
+//            for (Component c : panelFiltros.getComponents()){
+//                c.setEnabled(false);
+//            }
+//        }
     }
     /**
      * Establece el filtro a usar por la tabla de empleados en funcion de lo 
@@ -373,9 +365,9 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         }
 
         RowFilter<EmpleadosTableModel, Integer> rf = RowFilter.regexFilter(txtFiltro, indiceFiltro);
-        TableRowSorter<EmpleadosTableModel> rs = (TableRowSorter<EmpleadosTableModel>) tblTodosEmpleados.getRowSorter();
+        TableRowSorter<EmpleadosTableModel> rs = (TableRowSorter<EmpleadosTableModel>) tblEmpleados.getRowSorter();
         rs.setRowFilter(rf);
-        tblTodosEmpleados.getSelectionModel().clearSelection();
+        tblEmpleados.getSelectionModel().clearSelection();
     }
     
     
@@ -402,7 +394,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      * @param idEmpleado Id del empleado 
      */
     private void empleadoSeleccionado(int idEmpleado) {
-        empleadoSiendoEditado = Controlador.getEmpleado(idEmpleado);
+        empleadoSiendoEditado = (Empleado)controlador.getTupla(0,idEmpleado);
         if (operacionesActivadas)
             rellenarFichaEmpleado();
     }
@@ -513,6 +505,8 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         inputDniEmpleado.setText(empleadoSiendoEditado.getDni());
         inputSueldoEmpleado.setText("" + empleadoSiendoEditado.getSueldo());
         inputIdEmpleado.setText("" + empleadoSiendoEditado.getId());
+        inputIdEmpleado.setVisible(true);
+        lbFichaEmpID.setVisible(true);
         habilitarFichaEmpleado();
         setFichaNoEditable();
     }
@@ -604,8 +598,8 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         }
 
         String dni = this.inputDniEmpleado.getText();
-        if (dni.length() < 9) {
-            msgError("Dni no válido. Debe tener al menos 9 caracteres");
+        if (dni.length() != 9 ) {
+            msgError("Dni no válido. Debe tener 9 caracteres");
             return null;
         }
 
@@ -619,7 +613,12 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
             msgError("Sueldo no válido");
             return null;
         }
-        int id = Integer.parseInt(this.inputIdEmpleado.getText());
+        int id=-1;
+        try{
+        id = Integer.parseInt(this.inputIdEmpleado.getText());
+        }catch(NumberFormatException ex){
+        
+        }
 
         return new Empleado(id, nombre, apellidos, dni, sueldo);
 
@@ -651,10 +650,9 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
     private void btnGuardarCambiosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarCambiosActionPerformed
         Empleado e = recogerDatosFormularioEmpleado();
         if (e != null) {
-            Controlador.modificaEmpleado(e);
+            controlador.update(0, ""+e.getId(),e.getNombre(),e.getApellidos(),e.getDni(),""+e.getSueldo());
             msgInfo("Empleado modificado");
-            actualizarTablaTodosEmpleados();
-            actualizarTablaEmpleadosDeTrabajos();
+            inicializarTablaTodosEmpleados();
         }
     }//GEN-LAST:event_btnGuardarCambiosActionPerformed
 //</editor-fold>//</editor-fold>
@@ -672,8 +670,9 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         rgOperacionesEmpleado.setSelected( rbAnadirEmpleado.getModel(), true);
         btnGuardarEmpleado.setEnabled(true);
         vaciarFichaEmpleado();
-        //TODO input id empleado
-        //inputIdEmpleado.setText("" + Controlador.proximaIdEmpleado);
+        //ocultar id
+        inputIdEmpleado.setVisible(false);
+        lbFichaEmpID.setVisible(false);
         setFichaSiEditable();
         habilitarFiltrado();
     }
@@ -694,13 +693,18 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
     private void btnGuardarEmpleadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarEmpleadoActionPerformed
         Empleado e = recogerDatosFormularioEmpleado();
         if (e != null) {
-            Controlador.addEmpleado(e);
+            int res = controlador.insert(0, e.getNombre(),e.getApellidos(),e.getDni(),""+e.getSueldo());
+           if (res==1){
             vaciarFichaEmpleado();
             setFichaSiEditable();
             msgInfo("Empleado añadido");
-            actualizarTablaTodosEmpleados();
-            actualizarTablaEmpleadosDeTrabajos();
+            inicializarTablaTodosEmpleados();
             activarOpcionAnadirEmpleado();
+           }else if (res == -2){
+               msgError("Ya existe un empleado con ese DNI");
+           }else{
+           msgError("No se pudo insertar el empleado");
+           }
         }
     }//GEN-LAST:event_btnGuardarEmpleadoActionPerformed
 //</editor-fold>
@@ -733,11 +737,12 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
      */
     private void btnEliminarEmpleadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarEmpleadoActionPerformed
         if (confirmar("Realmente desea borrar el empleado " + empleadoSiendoEditado.getId() + " " + empleadoSiendoEditado.getNombre() + " " + empleadoSiendoEditado.getApellidos())) {
-            Controlador.eliminarEmpleado(empleadoSiendoEditado);
+            controlador.delete(0, ""+empleadoSiendoEditado.getId());
             msgInfo("Empleado eliminado");
             empleadoSiendoEditado=null;
-            actualizarTablaTodosEmpleados();
-            actualizarTablaEmpleadosDeTrabajos();
+            inicializarTablaTodosEmpleados();
+            if (trabajoSiendoEditado!=null)
+            inicializarTablaEmpleadosDeTrabajo(trabajoSiendoEditado.getID());
         }
     }//GEN-LAST:event_btnEliminarEmpleadoActionPerformed
 //</editor-fold>
@@ -781,17 +786,21 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
             msgError("Numero de trabajo erroneo");
             return;
         }
-        Trabajo t = Controlador.getTrabajo(numeroTrabajo);
-        if (t == null) {
-            msgError("El trabajo " + numeroTrabajo + " no existe");
-            return;
-        }
-
-        Controlador.asignarEmpleadoATrabajo(empleadoSiendoEditado.getId(), numeroTrabajo);
-        msgInfo("Empleado " + empleadoSiendoEditado.getId() + " " + empleadoSiendoEditado.getNombre() + " " + empleadoSiendoEditado.getApellidos() + " asignado a trabajo " + t.getID()+ " " + t.getNombre());
+        
+        int res = controlador.insert(2, ""+numeroTrabajo, ""+empleadoSiendoEditado.getId() );
+        if (res ==-2)
+            msgError("El empleado ("+empleadoSiendoEditado.getId()+")"+empleadoSiendoEditado.getNombre()+" "+empleadoSiendoEditado.getApellidos()+" ya está asignado al trabajo "+numeroTrabajo);
+        else if (res ==-3)
+            msgError("El trabajado "+numeroTrabajo+" no existe");
+        else if (res==-1)
+            msgError("Hubo un error asignando el trabajo");
+        else{
+        msgInfo("Empleado " + empleadoSiendoEditado.getId() + " " + empleadoSiendoEditado.getNombre() + " " + empleadoSiendoEditado.getApellidos() + " asignado a trabajo " + numeroTrabajo);
         inputNTrabajoEmpleado.setText("");
-        actualizarTablaTrabajos();
-        actualizarTablaEmpleadosDeTrabajos();
+        inicializarTablaTrabajos();
+        if (trabajoSiendoEditado!=null)
+        inicializarTablaEmpleadosDeTrabajo(trabajoSiendoEditado.getID());
+        }
     }//GEN-LAST:event_btnAsignarEmpleadoActionPerformed
     //</editor-fold>
 //</editor-fold>
@@ -806,22 +815,26 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         if (e.getSource().equals(tblTrabajos.getSelectionModel())) {
             if (this.tblTrabajos.getSelectedRow() != -1) {
                 btnGestionarEmpleados.setEnabled(true);
+                btnEliminarTrabajo.setEnabled(true);
+                btnEditarTrabajo.setEnabled(true);
             } else {
                 btnGestionarEmpleados.setEnabled(false);
+                btnEliminarTrabajo.setEnabled(false);
+                btnEditarTrabajo.setEnabled(false);
             }
         } //tabla empleados de trabajo
-        else if (e.getSource().equals(tblEmpleadosDeTrabajo.getSelectionModel())) {
-            if (this.tblEmpleadosDeTrabajo.getSelectedRow() != -1) {
+        else if (e.getSource().equals(tblTrabajosEmpleados.getSelectionModel())) {
+            if (this.tblTrabajosEmpleados.getSelectedRow() != -1) {
                 btnDesasignar.setEnabled(true);
             } else {
                 btnDesasignar.setEnabled(false);
             }
         } //tabla empleados
-        else if (e.getSource().equals(tblTodosEmpleados.getSelectionModel())) {
-            int filaSeleccionada = this.tblTodosEmpleados.getSelectedRow();
+        else if (e.getSource().equals(tblEmpleados.getSelectionModel())) {
+            int filaSeleccionada = this.tblEmpleados.getSelectedRow();
             if (filaSeleccionada != -1) {
-                int filaCorrecta = this.tblTodosEmpleados.convertRowIndexToModel(filaSeleccionada);
-                int idEmpleado = (int) this.tblTodosEmpleados.getModel().getValueAt(filaCorrecta, 0);
+                int filaCorrecta = this.tblEmpleados.convertRowIndexToModel(filaSeleccionada);
+                int idEmpleado = (int) this.tblEmpleados.getModel().getValueAt(filaCorrecta, 0);
                 empleadoSeleccionado(idEmpleado);
                 if (operacionesActivadas) {
                     activarOperaciones();
@@ -838,11 +851,11 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
 
 //####################################################################
 //<editor-fold defaultstate="collapsed" desc="MENSAJES INFORMACION">
-    private void msgError(String msg) {
+    public void msgError(String msg) {
         JOptionPane.showMessageDialog(this, msg, "error", JOptionPane.ERROR_MESSAGE);
     }
 
-    private void msgInfo(String msg) {
+    public void msgInfo(String msg) {
         JOptionPane.showMessageDialog(this, msg, "error", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -880,30 +893,40 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         panelOpcionesTrabajos = new javax.swing.JPanel();
         btnAgregarTrabajo = new javax.swing.JButton();
         btnGestionarEmpleados = new javax.swing.JButton();
+        btnEliminarTrabajo = new javax.swing.JButton();
+        btnEditarTrabajo = new javax.swing.JButton();
         panelAccionesTrabajos = new javax.swing.JPanel();
         panelGestionEmpleadosTrabajo = new javax.swing.JPanel();
         panelCentralAccionTrabajosGestionaEmpleados = new javax.swing.JPanel();
         lbGestionEmpleados = new javax.swing.JLabel();
         lbNombreTrabajo = new javax.swing.JLabel();
         jScrollPaneTblEmpleadosDeTrabajo = new javax.swing.JScrollPane();
-        tblEmpleadosDeTrabajo = new javax.swing.JTable();
+        tblTrabajosEmpleados = new javax.swing.JTable();
         btnDesasignar = new javax.swing.JButton();
         panelAgregarTrabajo = new javax.swing.JPanel();
         lbAgregarTrabajo = new javax.swing.JLabel();
         panelAccionAgregarTrabajoInterno = new javax.swing.JPanel();
-        lbNTrabajoinfo = new javax.swing.JLabel();
-        lbIdTrabajo = new javax.swing.JLabel();
         lbNombreTrabajoNuevo = new javax.swing.JLabel();
         inputNombreTrabajo = new javax.swing.JTextField();
         btnGuardarTrabajoNuevo = new javax.swing.JButton();
         lbDescripcionTrabajo = new javax.swing.JLabel();
         inputDescripcionTrabajo = new javax.swing.JTextField();
+        panelEditarTrabajo = new javax.swing.JPanel();
+        lbEditarTrabajo = new javax.swing.JLabel();
+        panelAccionEditarTrabajoInterno = new javax.swing.JPanel();
+        lbEditarNTrabajoinfo = new javax.swing.JLabel();
+        lbEditarIdTrabajo = new javax.swing.JLabel();
+        lbEditarNombreTrabajo = new javax.swing.JLabel();
+        inputEditarNombreTrabajo = new javax.swing.JTextField();
+        btnGuardarEditarTrabajo = new javax.swing.JButton();
+        lbEditarDescripcionTrabajo = new javax.swing.JLabel();
+        inputEditarDescripcionTrabajo = new javax.swing.JTextField();
         panelGeneralEmpleados = new javax.swing.JPanel();
         panelSuperiorEmpleados = new javax.swing.JPanel();
         lbGestionDeEmpleados = new javax.swing.JLabel();
         panelTablaEmpleados = new javax.swing.JPanel();
         tblEmpleadosScroll = new javax.swing.JScrollPane();
-        tblTodosEmpleados = new javax.swing.JTable();
+        tblEmpleados = new javax.swing.JTable();
         panelFiltros = new javax.swing.JPanel();
         lbBuscarPor = new javax.swing.JLabel();
         rbFiltroApellido = new javax.swing.JRadioButton();
@@ -937,8 +960,11 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         lbOperacionesNtrabajo = new javax.swing.JLabel();
         inputNTrabajoEmpleado = new javax.swing.JTextField();
         btnAsignarEmpleado = new javax.swing.JButton();
+        panelDesconectado = new javax.swing.JPanel();
         panelEstado = new javax.swing.JPanel();
         lbDatosConexion = new javax.swing.JLabel();
+        panelDesconexion = new javax.swing.JPanel();
+        etiquetaDesconexion = new javax.swing.JLabel();
         barraDeMenu = new javax.swing.JMenuBar();
         menu = new javax.swing.JMenu();
         miConectar = new javax.swing.JMenuItem();
@@ -974,7 +1000,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
             panelTablaTrabajosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelTablaTrabajosLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tblTrabajosScroll, javax.swing.GroupLayout.DEFAULT_SIZE, 815, Short.MAX_VALUE)
+                .addComponent(tblTrabajosScroll)
                 .addContainerGap())
         );
         panelTablaTrabajosLayout.setVerticalGroup(
@@ -1000,18 +1026,33 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
             }
         });
 
+        btnEliminarTrabajo.setText("Eliminar Trabajo");
+        btnEliminarTrabajo.setEnabled(false);
+        btnEliminarTrabajo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEliminarTrabajoActionPerformed(evt);
+            }
+        });
+
+        btnEditarTrabajo.setText("Editar Trabajo");
+        btnEditarTrabajo.setEnabled(false);
+        btnEditarTrabajo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEditarTrabajoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout panelOpcionesTrabajosLayout = new javax.swing.GroupLayout(panelOpcionesTrabajos);
         panelOpcionesTrabajos.setLayout(panelOpcionesTrabajosLayout);
         panelOpcionesTrabajosLayout.setHorizontalGroup(
             panelOpcionesTrabajosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelOpcionesTrabajosLayout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(panelOpcionesTrabajosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelOpcionesTrabajosLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(btnAgregarTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(panelOpcionesTrabajosLayout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnGestionarEmpleados, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(btnEditarTrabajo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnAgregarTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnEliminarTrabajo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnGestionarEmpleados, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
         panelOpcionesTrabajosLayout.setVerticalGroup(
@@ -1019,9 +1060,13 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
             .addGroup(panelOpcionesTrabajosLayout.createSequentialGroup()
                 .addGap(40, 40, 40)
                 .addComponent(btnAgregarTrabajo)
-                .addGap(44, 44, 44)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(btnEliminarTrabajo)
+                .addGap(18, 18, 18)
+                .addComponent(btnEditarTrabajo)
+                .addGap(18, 18, 18)
                 .addComponent(btnGestionarEmpleados)
-                .addContainerGap(129, Short.MAX_VALUE))
+                .addContainerGap(38, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout panelSuperiorTrabajosLayout = new javax.swing.GroupLayout(panelSuperiorTrabajos);
@@ -1057,9 +1102,10 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         lbGestionEmpleados.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lbGestionEmpleados.setText("Gestion de empleados de trabajo:");
 
+        lbNombreTrabajo.setFont(new java.awt.Font("Segoe UI", 2, 18)); // NOI18N
         lbNombreTrabajo.setText(" ");
 
-        tblEmpleadosDeTrabajo.setModel(new javax.swing.table.DefaultTableModel(
+        tblTrabajosEmpleados.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -1067,7 +1113,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
 
             }
         ));
-        jScrollPaneTblEmpleadosDeTrabajo.setViewportView(tblEmpleadosDeTrabajo);
+        jScrollPaneTblEmpleadosDeTrabajo.setViewportView(tblTrabajosEmpleados);
 
         btnDesasignar.setText("Desasignar");
         btnDesasignar.setEnabled(false);
@@ -1139,8 +1185,6 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
 
         panelAccionAgregarTrabajoInterno.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(153, 153, 153)));
 
-        lbNTrabajoinfo.setText("NºTrabajo:");
-
         lbNombreTrabajoNuevo.setText("Nombre:");
 
         inputNombreTrabajo.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -1159,12 +1203,6 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
 
         lbDescripcionTrabajo.setText("Descripcion:");
 
-        inputDescripcionTrabajo.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                inputDescripcionTrabajoKeyReleased(evt);
-            }
-        });
-
         javax.swing.GroupLayout panelAccionAgregarTrabajoInternoLayout = new javax.swing.GroupLayout(panelAccionAgregarTrabajoInterno);
         panelAccionAgregarTrabajoInterno.setLayout(panelAccionAgregarTrabajoInternoLayout);
         panelAccionAgregarTrabajoInternoLayout.setHorizontalGroup(
@@ -1177,27 +1215,17 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
                 .addGap(24, 24, 24)
                 .addGroup(panelAccionAgregarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(lbNombreTrabajoNuevo)
-                    .addComponent(lbNTrabajoinfo)
                     .addComponent(lbDescripcionTrabajo))
                 .addGap(25, 25, 25)
                 .addGroup(panelAccionAgregarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelAccionAgregarTrabajoInternoLayout.createSequentialGroup()
-                        .addComponent(lbIdTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(panelAccionAgregarTrabajoInternoLayout.createSequentialGroup()
-                        .addGroup(panelAccionAgregarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(inputDescripcionTrabajo)
-                            .addComponent(inputNombreTrabajo))
-                        .addGap(24, 24, 24))))
+                    .addComponent(inputDescripcionTrabajo, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
+                    .addComponent(inputNombreTrabajo))
+                .addGap(24, 24, 24))
         );
         panelAccionAgregarTrabajoInternoLayout.setVerticalGroup(
             panelAccionAgregarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelAccionAgregarTrabajoInternoLayout.createSequentialGroup()
-                .addGap(24, 24, 24)
-                .addGroup(panelAccionAgregarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(lbNTrabajoinfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(lbIdTrabajo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(22, 22, 22)
                 .addGroup(panelAccionAgregarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lbNombreTrabajoNuevo)
                     .addComponent(inputNombreTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1215,11 +1243,13 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         panelAgregarTrabajoLayout.setHorizontalGroup(
             panelAgregarTrabajoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelAgregarTrabajoLayout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addGroup(panelAgregarTrabajoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(panelAccionAgregarTrabajoInterno, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lbAgregarTrabajo))
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addGap(0, 424, Short.MAX_VALUE)
+                .addComponent(lbAgregarTrabajo)
+                .addGap(0, 456, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelAgregarTrabajoLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(panelAccionAgregarTrabajoInterno, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panelAgregarTrabajoLayout.setVerticalGroup(
             panelAgregarTrabajoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1233,6 +1263,103 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
 
         panelAccionesTrabajos.add(panelAgregarTrabajo, "panelAgregarTrabajo");
 
+        panelEditarTrabajo.setName("panelEditarTrabajo"); // NOI18N
+
+        lbEditarTrabajo.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        lbEditarTrabajo.setText("Editar Trabajo");
+
+        panelAccionEditarTrabajoInterno.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(153, 153, 153)));
+
+        lbEditarNTrabajoinfo.setText("NºTrabajo:");
+
+        lbEditarNombreTrabajo.setText("Nombre:");
+
+        inputEditarNombreTrabajo.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                inputEditarNombreTrabajoKeyReleased(evt);
+            }
+        });
+
+        btnGuardarEditarTrabajo.setText("Guardar Trabajo");
+        btnGuardarEditarTrabajo.setEnabled(false);
+        btnGuardarEditarTrabajo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGuardarEditarTrabajoActionPerformed(evt);
+            }
+        });
+
+        lbEditarDescripcionTrabajo.setText("Descripcion:");
+
+        javax.swing.GroupLayout panelAccionEditarTrabajoInternoLayout = new javax.swing.GroupLayout(panelAccionEditarTrabajoInterno);
+        panelAccionEditarTrabajoInterno.setLayout(panelAccionEditarTrabajoInternoLayout);
+        panelAccionEditarTrabajoInternoLayout.setHorizontalGroup(
+            panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelAccionEditarTrabajoInternoLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(btnGuardarEditarTrabajo)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(panelAccionEditarTrabajoInternoLayout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addGroup(panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lbEditarNombreTrabajo)
+                    .addComponent(lbEditarNTrabajoinfo)
+                    .addComponent(lbEditarDescripcionTrabajo))
+                .addGap(25, 25, 25)
+                .addGroup(panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelAccionEditarTrabajoInternoLayout.createSequentialGroup()
+                        .addComponent(lbEditarIdTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(panelAccionEditarTrabajoInternoLayout.createSequentialGroup()
+                        .addGroup(panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(inputEditarDescripcionTrabajo, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
+                            .addComponent(inputEditarNombreTrabajo))
+                        .addGap(24, 24, 24))))
+        );
+        panelAccionEditarTrabajoInternoLayout.setVerticalGroup(
+            panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelAccionEditarTrabajoInternoLayout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addGroup(panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(lbEditarNTrabajoinfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(lbEditarIdTrabajo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lbEditarNombreTrabajo)
+                    .addComponent(inputEditarNombreTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelAccionEditarTrabajoInternoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lbEditarDescripcionTrabajo)
+                    .addComponent(inputEditarDescripcionTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(32, 32, 32)
+                .addComponent(btnGuardarEditarTrabajo)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout panelEditarTrabajoLayout = new javax.swing.GroupLayout(panelEditarTrabajo);
+        panelEditarTrabajo.setLayout(panelEditarTrabajoLayout);
+        panelEditarTrabajoLayout.setHorizontalGroup(
+            panelEditarTrabajoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelEditarTrabajoLayout.createSequentialGroup()
+                .addGap(0, 437, Short.MAX_VALUE)
+                .addComponent(lbEditarTrabajo)
+                .addGap(0, 468, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelEditarTrabajoLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(panelAccionEditarTrabajoInterno, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        panelEditarTrabajoLayout.setVerticalGroup(
+            panelEditarTrabajoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelEditarTrabajoLayout.createSequentialGroup()
+                .addGap(22, 22, 22)
+                .addComponent(lbEditarTrabajo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(panelAccionEditarTrabajoInterno, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        panelAccionesTrabajos.add(panelEditarTrabajo, "panelEditarTrabajo");
+
         javax.swing.GroupLayout panelGeneralTrabajosLayout = new javax.swing.GroupLayout(panelGeneralTrabajos);
         panelGeneralTrabajos.setLayout(panelGeneralTrabajosLayout);
         panelGeneralTrabajosLayout.setHorizontalGroup(
@@ -1244,7 +1371,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
             panelGeneralTrabajosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelGeneralTrabajosLayout.createSequentialGroup()
                 .addComponent(panelSuperiorTrabajos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 36, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(panelAccionesTrabajos, javax.swing.GroupLayout.PREFERRED_SIZE, 328, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -1256,7 +1383,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         lbGestionDeEmpleados.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         lbGestionDeEmpleados.setText("GESTIÓN DE EMPLEADOS");
 
-        tblTodosEmpleados.setModel(new javax.swing.table.DefaultTableModel(
+        tblEmpleados.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -1264,7 +1391,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
 
             }
         ));
-        tblEmpleadosScroll.setViewportView(tblTodosEmpleados);
+        tblEmpleadosScroll.setViewportView(tblEmpleados);
 
         javax.swing.GroupLayout panelTablaEmpleadosLayout = new javax.swing.GroupLayout(panelTablaEmpleados);
         panelTablaEmpleados.setLayout(panelTablaEmpleadosLayout);
@@ -1675,6 +1802,21 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
 
         panelCardsGeneral.add(panelGeneralEmpleados, "panelGeneralEmpleados");
 
+        panelDesconectado.setName("panelDesconectado"); // NOI18N
+
+        javax.swing.GroupLayout panelDesconectadoLayout = new javax.swing.GroupLayout(panelDesconectado);
+        panelDesconectado.setLayout(panelDesconectadoLayout);
+        panelDesconectadoLayout.setHorizontalGroup(
+            panelDesconectadoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1052, Short.MAX_VALUE)
+        );
+        panelDesconectadoLayout.setVerticalGroup(
+            panelDesconectadoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 685, Short.MAX_VALUE)
+        );
+
+        panelCardsGeneral.add(panelDesconectado, "panelDesconectado");
+
         getContentPane().add(panelCardsGeneral, java.awt.BorderLayout.CENTER);
 
         panelEstado.setBackground(new java.awt.Color(255, 255, 255));
@@ -1685,6 +1827,15 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         panelEstado.add(lbDatosConexion);
 
         getContentPane().add(panelEstado, java.awt.BorderLayout.SOUTH);
+
+        panelDesconexion.setBackground(new java.awt.Color(255, 218, 83));
+        panelDesconexion.setForeground(new java.awt.Color(222, 222, 115));
+        panelDesconexion.setLayout(new java.awt.BorderLayout());
+
+        etiquetaDesconexion.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        panelDesconexion.add(etiquetaDesconexion, java.awt.BorderLayout.CENTER);
+
+        getContentPane().add(panelDesconexion, java.awt.BorderLayout.NORTH);
 
         menu.setText("Menu");
 
@@ -1740,34 +1891,89 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void inputDescripcionTrabajoKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputDescripcionTrabajoKeyReleased
-        // TODO add your handling code here:
-    }//GEN-LAST:event_inputDescripcionTrabajoKeyReleased
-
-    private void miConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miConectarActionPerformed
-        if (controlador.conectar()){
-            miConectar.setEnabled(false);
-            miDesconectar.setEnabled(true);
-            miTrabajos.setEnabled(true);
-            miEmpleados.setEnabled(true);
-            panelEstado.setBackground(Color.GREEN);
-            lbDatosConexion.setText("Conectado: "+controlador.getDatosConexion());
-        }else{
-            lbDatosConexion.setText("Desconectado");
-        }
-        
-    }//GEN-LAST:event_miConectarActionPerformed
-
     private void miDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDesconectarActionPerformed
-                if (controlador.desconectar()){
+        desconectar();
+    }//GEN-LAST:event_miDesconectarActionPerformed
+
+    public void desconectar(){
+                    if (controlador.desconectar()){
             miConectar.setEnabled(true);
             miDesconectar.setEnabled(false);
             miTrabajos.setEnabled(false);
             miEmpleados.setEnabled(false);
             panelEstado.setBackground(Color.WHITE);
              lbDatosConexion.setText("Desconectado");
+                         CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
+            cl.show(panelCardsGeneral, "panelGeneralTrabajos");
+            autodesconexion.setConectado(false);
+            cl.show(panelCardsGeneral, "panelDesconectado");
+        }}
+    private void miConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miConectarActionPerformed
+        if (controlador.conectar()){
+            miConectar.setEnabled(false);
+            miDesconectar.setEnabled(true);
+            miTrabajos.setEnabled(true);
+            miEmpleados.setEnabled(true);
+            panelEstado.setBackground(new Color(153,202,153));
+            lbDatosConexion.setText("Conectado: "+controlador.getDatosConexion());
+            //inicializar tablas
+            inicializarTablaTrabajos();
+            CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
+            cl.show(panelCardsGeneral, "panelGeneralTrabajos");
+            panelEstado.setToolTipText("Conectado");
+            autodesconexion.setConectado(true);
+        }else{
+            lbDatosConexion.setText("Desconectado");
+            panelEstado.setBackground(Color.RED);  
+            CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
+            cl.show(panelCardsGeneral, "panelDesconectado");
+            panelEstado.setToolTipText(controlador.getUltimoError());
         }
-    }//GEN-LAST:event_miDesconectarActionPerformed
+        
+    }//GEN-LAST:event_miConectarActionPerformed
+
+    private void btnEliminarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarTrabajoActionPerformed
+       int filaSeleccionada = this.tblTrabajos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            return;//no hacer nada si no hay fila seleccionada
+        }        //Hace conversion segun el modelo de tabla
+        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
+        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
+        if (controlador.delete(1,""+idTrabajo)>0)
+            inicializarTablaTrabajos();
+    }//GEN-LAST:event_btnEliminarTrabajoActionPerformed
+
+    private void inputEditarNombreTrabajoKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputEditarNombreTrabajoKeyReleased
+        String txt = this.inputEditarNombreTrabajo.getText();
+        if (txt == null || !txt.equals( ""))
+            this.btnGuardarEditarTrabajo.setEnabled(true);
+        else
+            this.btnGuardarEditarTrabajo.setEnabled(false);
+    }//GEN-LAST:event_inputEditarNombreTrabajoKeyReleased
+
+    private void btnGuardarEditarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarEditarTrabajoActionPerformed
+        String id = ""+trabajoSiendoEditado.getID();
+        String nombre = inputEditarNombreTrabajo.getText();
+        String descripcion = inputEditarDescripcionTrabajo.getText();
+        if (nombre.length() > 0) {
+            String[] valores={id,nombre,descripcion};
+            if(controlador.update(1,valores)>0);
+                msgInfo("Trabajo actualizado");
+            this.inicializarTablaTrabajos();
+        }
+    }//GEN-LAST:event_btnGuardarEditarTrabajoActionPerformed
+
+    private void btnEditarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarTrabajoActionPerformed
+               int filaSeleccionada = this.tblTrabajos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            return;//no hacer nada si no hay fila seleccionada
+        }        //Hace conversion segun el modelo de tabla
+        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
+        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
+        editarTrabajo(idTrabajo);
+        btnGuardarEditarTrabajo.setEnabled(true);
+        
+    }//GEN-LAST:event_btnEditarTrabajoActionPerformed
 
 
     // <editor-fold defaultstate="collapsed" desc="ATRIBUTOS AUTOGENERADOS">  
@@ -1777,17 +1983,23 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
     private javax.swing.JButton btnAsignarEmpleado;
     private javax.swing.JButton btnBuscarFiltro;
     private javax.swing.JButton btnDesasignar;
+    private javax.swing.JButton btnEditarTrabajo;
     private javax.swing.JButton btnEliminarEmpleado;
+    private javax.swing.JButton btnEliminarTrabajo;
     private javax.swing.JButton btnFiltroLimpiar;
     private javax.swing.JButton btnGestionarEmpleados;
     private javax.swing.JButton btnGuardarCambios;
+    private javax.swing.JButton btnGuardarEditarTrabajo;
     private javax.swing.JButton btnGuardarEmpleado;
     private javax.swing.JButton btnGuardarTrabajoNuevo;
     private javax.swing.JButton btnOperacionesActDes;
     private javax.swing.JTextField busqueda;
+    private javax.swing.JLabel etiquetaDesconexion;
     private javax.swing.JTextField inputApellidosEmpleado;
     private javax.swing.JTextField inputDescripcionTrabajo;
     private javax.swing.JTextField inputDniEmpleado;
+    private javax.swing.JTextField inputEditarDescripcionTrabajo;
+    private javax.swing.JTextField inputEditarNombreTrabajo;
     private javax.swing.JTextField inputIdEmpleado;
     private javax.swing.JTextField inputNTrabajoEmpleado;
     private javax.swing.JTextField inputNombreEmpleado;
@@ -1798,6 +2010,11 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
     private javax.swing.JLabel lbBuscarPor;
     private javax.swing.JLabel lbDatosConexion;
     private javax.swing.JLabel lbDescripcionTrabajo;
+    private javax.swing.JLabel lbEditarDescripcionTrabajo;
+    private javax.swing.JLabel lbEditarIdTrabajo;
+    private javax.swing.JLabel lbEditarNTrabajoinfo;
+    private javax.swing.JLabel lbEditarNombreTrabajo;
+    private javax.swing.JLabel lbEditarTrabajo;
     private javax.swing.JLabel lbFichaEmpApellidos;
     private javax.swing.JLabel lbFichaEmpDNI;
     private javax.swing.JLabel lbFichaEmpID;
@@ -1807,8 +2024,6 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
     private javax.swing.JLabel lbGestionDeEmpleados;
     private javax.swing.JLabel lbGestionDeTrabajos;
     private javax.swing.JLabel lbGestionEmpleados;
-    private javax.swing.JLabel lbIdTrabajo;
-    private javax.swing.JLabel lbNTrabajoinfo;
     private javax.swing.JLabel lbNombreTrabajo;
     private javax.swing.JLabel lbNombreTrabajoNuevo;
     private javax.swing.JLabel lbOperacionesNtrabajo;
@@ -1819,10 +2034,14 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
     private javax.swing.JMenuItem miSalir;
     private javax.swing.JMenuItem miTrabajos;
     private javax.swing.JPanel panelAccionAgregarTrabajoInterno;
+    private javax.swing.JPanel panelAccionEditarTrabajoInterno;
     private javax.swing.JPanel panelAccionesTrabajos;
     private javax.swing.JPanel panelAgregarTrabajo;
     private javax.swing.JPanel panelCardsGeneral;
     private javax.swing.JPanel panelCentralAccionTrabajosGestionaEmpleados;
+    private javax.swing.JPanel panelDesconectado;
+    private javax.swing.JPanel panelDesconexion;
+    private javax.swing.JPanel panelEditarTrabajo;
     private javax.swing.JPanel panelEstado;
     private javax.swing.JPanel panelFichaEmpleado;
     private javax.swing.JPanel panelFichaYoperacionesEmpleado;
@@ -1845,12 +2064,21 @@ public class VentanaPrincipal extends javax.swing.JFrame implements ListSelectio
     private javax.swing.JRadioButton rbModificarEmpleado;
     private javax.swing.ButtonGroup rgFiltro;
     private javax.swing.ButtonGroup rgOperacionesEmpleado;
-    private javax.swing.JTable tblEmpleadosDeTrabajo;
+    private javax.swing.JTable tblEmpleados;
     private javax.swing.JScrollPane tblEmpleadosScroll;
-    private javax.swing.JTable tblTodosEmpleados;
     private javax.swing.JTable tblTrabajos;
+    private javax.swing.JTable tblTrabajosEmpleados;
     private javax.swing.JScrollPane tblTrabajosScroll;
     // End of variables declaration//GEN-END:variables
 
+    void mostrarAvisoDesconexion(String texto) {
+        panelDesconexion.setVisible(true);
+        etiquetaDesconexion.setText(texto);
+    }
+
 // </editor-fold>     
+
+    void ocultarAvisoDesconexion() {
+        panelDesconexion.setVisible(false);
+    }
 }//fin de clase

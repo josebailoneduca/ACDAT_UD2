@@ -878,7 +878,7 @@
                   <SubComponents>
                     <Component class="javax.swing.JLabel" name="lbBuscarPor">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Buscar por:"/>
+                        <Property name="text" type="java.lang.String" value="Filtrar por:"/>
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JRadioButton" name="rbFiltroApellido">

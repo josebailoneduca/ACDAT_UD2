@@ -6,10 +6,8 @@ Lista de paquetes:
  */
 package ud2_03.controlador.dto;
 
-import java.util.ArrayList;
-
 /**
- * DTO Trabajo
+ * DTO TrabajoEmpleado
  *
  * @author Jose Javier BO
  */
@@ -28,18 +26,19 @@ public class TrabajoEmpleado {
     //METODOS
     
     /**
-     * Constructor
-     * @param ID
-     * @param numero
-     * @param nombre 
+     * Constructor 
+     * @param ID Id de la tupla
+     * @param IDtrabajo Fk de trabajo
+     * @param IDempleado  Fk de empleado
      */
-    
     public TrabajoEmpleado(int ID, int IDtrabajo, int IDempleado) {
         this.ID = ID;
         this.IDtrabajo = IDtrabajo;
         this.IDempleado = IDempleado;
     }
 
+    
+    //GETTERS Y SETTERS
     public int getID() {
         return ID;
     }

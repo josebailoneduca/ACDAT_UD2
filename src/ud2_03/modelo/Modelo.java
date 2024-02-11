@@ -37,7 +37,6 @@ public class Modelo {
 
 
     public Modelo() {
-
     }
 
     /**
@@ -60,9 +59,120 @@ public class Modelo {
         return true;
     }
 
+    
+        /**
+     * Devuelve los metadatos de la base de datos
+     *
+     * @return los metadatos
+     */
+    public DatabaseMetaData getMetadata() {
+        try {
+            return conexion.getMetaData();
+        } catch (SQLException ex) {
+            this.ultimoError = ex.getMessage();
+            return null;
+        }
+    }
+
+    /**
+     * Devuelve el catalog
+     *
+     * @return El catalog
+     */
+    public String getCatalog() {
+        try {
+            if (conexion != null) {
+                return conexion.getCatalog();
+            } else {
+                this.ultimoError = "La conexion no se ha creado";
+            }
+            return null;
+        } catch (SQLException ex) {
+            this.ultimoError = ex.getMessage();
+            return null;
+        }
+    }
+    
+    /**
+     * Devuelve informacion sobre el SGBD/databaseproductname
+     * @return 
+     */
+    public String getSGBD() {
+        DatabaseMetaData md = getMetadata();
+        try {
+            return md.getDatabaseProductName();
+        } catch (SQLException ex) {
+            return "";
+        }
+    }
+
+    
+    /**
+     * Devuelve la URL de la conexion
+     * @return 
+     */
+    public String getUrlConexion() {
+        DatabaseMetaData md = getMetadata();
+        try {
+            return md.getURL();
+        } catch (SQLException ex) {
+            return "";
+        }
+    }
+
+    
+    /**
+     * Devuelve el nombre de usuario de conexion a la base de datos.
+     * @return 
+     */
+    public String getusername() {
+        DatabaseMetaData md = getMetadata();
+        try {
+            return md.getUserName();
+        } catch (SQLException ex) {
+            return "";
+        }
+    }
+
+    
+    
+    /**
+     * Devuelve la lista de columnas de una tabla
+     * @param tabla
+     * @return 
+     */
+    public ArrayList<String> listaColumnas(String tabla) {
+        ArrayList<String> list = new ArrayList<String>();
+
+        try {
+        ResultSet rsTabla = select(tabla);
+        if (rsTabla != null) {
+            //cantidad columnas
+            ResultSetMetaData metadatosTabla;
+                metadatosTabla = rsTabla.getMetaData();
+            int cantColumnas = metadatosTabla.getColumnCount();
+            //listado columnas con tipo de dato
+            for (int i = 1; i < cantColumnas + 1; i++) {
+                list.add(metadatosTabla.getColumnName(i));
+            }
+        }
+            } catch (SQLException ex) {
+            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+    
+    
+    /**
+     * Devuelve una lista con las tablas de la base de datos
+     * 
+     * @return  La lista
+     */
     public ArrayList<String> litstaTablas() {
         ArrayList<String> lista = new ArrayList<String>();
+        //recoger metadatos
         DatabaseMetaData md = getMetadata();
+        //extraer y recorrer las tablas seun el catalog
         try {
             ResultSet rsTablas = md.getTables(getCatalog(), null, null, null);
             while (rsTablas.next()) {
@@ -170,90 +280,5 @@ public class Modelo {
         return Update.updateWhere(conexion, tabla, campos, valores, campoClave, valorClave);
     }
 
-    /**
-     * Devuelve los metadatos de la base de datos
-     *
-     * @return los metadatos
-     */
-    public DatabaseMetaData getMetadata() {
-        try {
-            return conexion.getMetaData();
-        } catch (SQLException ex) {
-            this.ultimoError = ex.getMessage();
-            return null;
-        }
-    }
 
-    /**
-     * Devuelve el catalog
-     *
-     * @return El catalog
-     */
-    public String getCatalog() {
-        try {
-            if (conexion != null) {
-                return conexion.getCatalog();
-            } else {
-                this.ultimoError = "La conexion no se ha creado";
-            }
-            return null;
-        } catch (SQLException ex) {
-            this.ultimoError = ex.getMessage();
-            return null;
-        }
-    }
-
-    public String getSGBD() {
-        DatabaseMetaData md = getMetadata();
-        try {
-            return md.getDatabaseProductName();
-        } catch (SQLException ex) {
-            return "";
-        }
-    }
-
-    
-    
-    public String getUrlConexion() {
-        DatabaseMetaData md = getMetadata();
-        try {
-            return md.getURL();
-        } catch (SQLException ex) {
-            return "";
-        }
-    }
-
-    
-    
-    public String getusername() {
-        DatabaseMetaData md = getMetadata();
-        try {
-            return md.getUserName();
-        } catch (SQLException ex) {
-            return "";
-        }
-    }
-
-    
-    
-    public ArrayList<String> listaColumnas(String tabla) {
-        ArrayList<String> list = new ArrayList<String>();
-
-        try {
-        ResultSet rsTabla = select(tabla);
-        if (rsTabla != null) {
-            //cantidad columnas
-            ResultSetMetaData metadatosTabla;
-                metadatosTabla = rsTabla.getMetaData();
-            int cantColumnas = metadatosTabla.getColumnCount();
-            //listado columnas con tipo de dato
-            for (int i = 1; i < cantColumnas + 1; i++) {
-                list.add(metadatosTabla.getColumnName(i));
-            }
-        }
-            } catch (SQLException ex) {
-            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return list;
-    }
 }

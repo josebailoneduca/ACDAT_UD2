@@ -83,7 +83,7 @@ public class Insert {
             //si es error 1062  es por clave duplicada
             if (ec==1062)
                 return -2;
-            //sies error de foreing key no existente
+            //si es error 1452 es de foreing key no existente
             if (ec==1452)
                 return -3;
             else 

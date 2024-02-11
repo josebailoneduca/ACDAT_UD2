@@ -11,7 +11,7 @@ import javax.swing.table.AbstractTableModel;
 import ud2_03.controlador.dto.TrabajoEmpleado;
  
 /**
- * Tablemodel para la tabla de  trabajos
+ * Tablemodel para la tabla de  trabajosempleados
  * 
  * @author Jose Javier Bailon Ortiz
  */

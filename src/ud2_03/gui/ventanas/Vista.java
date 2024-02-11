@@ -8,6 +8,7 @@ package ud2_03.gui.ventanas;
 
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.ButtonModel;
@@ -27,7 +28,8 @@ import ud2_03.controlador.dto.TrabajoEmpleado;
 import ud2_03.gui.tablemodels.TrabajosEmpleadosTableModel;
 
 /**
- *
+ * Vista Ejercicion UD2_03
+ * 
  * @author Jose Javier BO
  */
 public class Vista extends javax.swing.JFrame implements ListSelectionListener {
@@ -37,24 +39,33 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
     private Empleado empleadoSiendoEditado = null;
     private boolean operacionesActivadas = false;
     private Controlador controlador=null;
-    
     private Autodesconexion autodesconexion;
+    
     /**
      * Creates new form VentanaPrincipal
      */
     public Vista() {
     }
 
+    /**
+     * Define la referencia al controlador y hace los ajustes iniciales
+     * 
+     * @param controlador  Referencia al controlador
+     */
     public void setControlador(Controlador controlador){
         this.controlador=controlador;
         initComponents();
+        //mostrar el cardlayout de no conectado
         CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
         cl.show(panelCardsGeneral, "panelDesconectado");
+        
+        //iniciar el observador para la autodesconexion
         autodesconexion=new Autodesconexion(this);
         autodesconexion.start();
     }
+    
 //###############################################################
-//<editor-fold defaultstate="collapsed" desc="INICIALIZACION">
+//<editor-fold defaultstate="collapsed" desc="REFRESCO DE TABLAS">
  
 
     /**
@@ -87,7 +98,8 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
   
 
     /**
-     * Establece un modelo preliminar para la tabla de empleados de un trabajo
+     * Inicializa la tabla de trabajosempleados conformando su modelo e introduciendo los datos
+     * necesarios obteniendolos solo de los asignados a un trabajo
      */
     private void inicializarTablaEmpleadosDeTrabajo(int idTrabajo) {
         ArrayList<TrabajoEmpleado> listaTrabajosEmpleados = new ArrayList<TrabajoEmpleado>();
@@ -135,9 +147,53 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
         this.tblEmpleados.getSelectionModel().addListSelectionListener(this);
 
     }
- 
 
 //</editor-fold>
+
+//#############################################################
+//<editor-fold defaultstate="collapsed" desc="LISTENER TABLAS">
+    /*listener clic tablas*/
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+
+        //tabla trabajos
+        if (e.getSource().equals(tblTrabajos.getSelectionModel())) {
+            if (this.tblTrabajos.getSelectedRow() != -1) {
+                btnGestionarEmpleados.setEnabled(true);
+                btnEliminarTrabajo.setEnabled(true);
+                btnEditarTrabajo.setEnabled(true);
+            } else {
+                btnGestionarEmpleados.setEnabled(false);
+                btnEliminarTrabajo.setEnabled(false);
+                btnEditarTrabajo.setEnabled(false);
+            }
+        } //tabla empleados de trabajo
+        else if (e.getSource().equals(tblTrabajosEmpleados.getSelectionModel())) {
+            if (this.tblTrabajosEmpleados.getSelectedRow() != -1) {
+                btnDesasignar.setEnabled(true);
+            } else {
+                btnDesasignar.setEnabled(false);
+            }
+        } //tabla empleados
+        else if (e.getSource().equals(tblEmpleados.getSelectionModel())) {
+            int filaSeleccionada = this.tblEmpleados.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                int filaCorrecta = this.tblEmpleados.convertRowIndexToModel(filaSeleccionada);
+                int idEmpleado = (int) this.tblEmpleados.getModel().getValueAt(filaCorrecta, 0);
+                empleadoSeleccionado(idEmpleado);
+                if (operacionesActivadas) {
+                    activarOperaciones();
+                }
+            } else {
+                empleadoSiendoEditado=null;
+                vaciarFichaEmpleado();
+                deshabilitarFichaEmpleado();
+                desactivarOperaciones();
+            }
+        }
+    }
+//</editor-fold>
+
 //########################################################################
 //<editor-fold defaultstate="collapsed" desc="MENU">   
 
@@ -171,6 +227,65 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
         habilitarFiltrado();
     }//GEN-LAST:event_miEmpleadosActionPerformed
 
+    /**
+     * Elemento de menu desconectar
+     * @param evt 
+     */
+    private void miDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDesconectarActionPerformed
+        desconectar();
+    }//GEN-LAST:event_miDesconectarActionPerformed
+
+    /**
+     * Ejecuta la desconexion
+     */
+    public void desconectar(){
+                    if (controlador.desconectar()){
+            miConectar.setEnabled(true);
+            miDesconectar.setEnabled(false);
+            miTrabajos.setEnabled(false);
+            miEmpleados.setEnabled(false);
+            panelEstado.setBackground(Color.WHITE);
+             lbDatosConexion.setText("Desconectado");
+                         CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
+            cl.show(panelCardsGeneral, "panelGeneralTrabajos");
+            autodesconexion.setConectado(false);
+            cl.show(panelCardsGeneral, "panelDesconectado");
+        }}
+    
+    /**
+     * Elemento de menu de conectar. Intenta ejecutar la conexion
+     * @param evt 
+     */
+    private void miConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miConectarActionPerformed
+        if (controlador.conectar()){
+            miConectar.setEnabled(false);
+            miDesconectar.setEnabled(true);
+            miTrabajos.setEnabled(true);
+            miEmpleados.setEnabled(true);
+            panelEstado.setBackground(new Color(153,202,153));
+            lbDatosConexion.setText("Conectado: "+controlador.getDatosConexion());
+            //inicializar tablas
+            inicializarTablaTrabajos();
+            CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
+            cl.show(panelCardsGeneral, "panelGeneralTrabajos");
+            panelEstado.setToolTipText("Conectado");
+            autodesconexion.setConectado(true);
+        }else{
+            lbDatosConexion.setText("Desconectado");
+            panelEstado.setBackground(Color.RED);  
+            CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
+            cl.show(panelCardsGeneral, "panelDesconectado");
+            panelEstado.setToolTipText(controlador.getUltimoError());
+        }
+        
+    }//GEN-LAST:event_miConectarActionPerformed
+
+ 
+
+
+
+
+
     //</editor-fold>
 //#####################################################################
 //<editor-fold defaultstate="collapsed" desc="TRABAJOS">  
@@ -193,7 +308,7 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
      */
     private void inputNombreTrabajoKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputNombreTrabajoKeyReleased
         String txt = this.inputNombreTrabajo.getText();
-        if (txt == null || txt != "")
+        if (txt == null || !txt.equals( ""))
             this.btnGuardarTrabajoNuevo.setEnabled(true);
         else
             this.btnGuardarTrabajoNuevo.setEnabled(false);
@@ -205,22 +320,128 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
      * @param evt 
      */
     private void btnGuardarTrabajoNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarTrabajoNuevoActionPerformed
-
+        //recoger datos
         String nombre = inputNombreTrabajo.getText();
         String descripcion = inputDescripcionTrabajo.getText();
         if (nombre.length() > 0) {
             String[] valores={nombre,descripcion};
+            //hacer la insercion
             controlador.insert(1,valores);
+            //refrescar interfaz
             this.inicializarTablaTrabajos();
             resetearFormNuevoTrabajo();
         }
     }//GEN-LAST:event_btnGuardarTrabajoNuevoActionPerformed
 //</editor-fold>//</editor-fold>
 
+
     //############################################
-    //<editor-fold defaultstate="collapsed" desc="TRABAJO ADMINISTRAR EMPLEADOS">   
+    //<editor-fold defaultstate="collapsed" desc="TRABAJO EDITAR">  
+
+    
     /**
      * Inicia la edicion de un trabajo
+     * @param evt 
+     */
+private void btnEditarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarTrabajoActionPerformed
+               int filaSeleccionada = this.tblTrabajos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            return;//no hacer nada si no hay fila seleccionada
+        }        //Hace conversion segun el modelo de tabla
+        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
+        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
+       //recoger id de trabajo seleccionado
+        this.trabajoSiendoEditado = (Trabajo)controlador.getTupla(1,idTrabajo);
+        if (trabajoSiendoEditado == null) {
+            return;
+        }
+        //mostrar y rellenar formulario de edicion
+        CardLayout cl = (CardLayout) this.panelAccionesTrabajos.getLayout();
+        cl.show(panelAccionesTrabajos, "panelEditarTrabajo");
+        this.lbEditarIdTrabajo.setText(""+trabajoSiendoEditado.getID());
+        this.inputEditarNombreTrabajo.setText(trabajoSiendoEditado.getNombre());
+        this.inputEditarDescripcionTrabajo.setText(trabajoSiendoEditado.getDescripcion());
+        btnGuardarEditarTrabajo.setEnabled(true);
+        
+    }//GEN-LAST:event_btnEditarTrabajoActionPerformed
+
+/**
+ * Escucha las teclas en el input de nombre de trabajo para decidir si habilitar el guardado
+ * @param evt 
+ */
+    private void inputEditarNombreTrabajoKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputEditarNombreTrabajoKeyReleased
+        String txt = this.inputEditarNombreTrabajo.getText();
+        if (txt == null || !txt.equals( ""))
+            this.btnGuardarEditarTrabajo.setEnabled(true);
+        else
+            this.btnGuardarEditarTrabajo.setEnabled(false);
+    }//GEN-LAST:event_inputEditarNombreTrabajoKeyReleased
+
+    /**
+     * Guarda la edicion de un trabajo
+     * @param evt 
+     */
+        private void btnGuardarEditarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarEditarTrabajoActionPerformed
+        String id = ""+trabajoSiendoEditado.getID();
+        String nombre = inputEditarNombreTrabajo.getText();
+        String descripcion = inputEditarDescripcionTrabajo.getText();
+        if (nombre.length() > 0) {
+            String[] valores={id,nombre,descripcion};
+            if(controlador.update(1,valores)>0);
+                msgInfo("Trabajo actualizado");
+            this.inicializarTablaTrabajos();
+        }
+    }//GEN-LAST:event_btnGuardarEditarTrabajoActionPerformed
+ 
+ 
+	
+	//</editor-fold>//</editor-fold>
+
+//############################################
+    //<editor-fold defaultstate="collapsed" desc="TRABAJO ELIMINAR">   
+   /**
+     * Eliminar un trabajo seleccionado
+     * @param evt 
+     */
+    private void btnEliminarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarTrabajoActionPerformed
+       int filaSeleccionada = this.tblTrabajos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            return;//no hacer nada si no hay fila seleccionada
+        }        //Hace conversion segun el modelo de tabla
+        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
+        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
+        if (confirmar("¿Desea eliminar el trabajo "+idTrabajo+"?"))
+            if (controlador.delete(1,""+idTrabajo)>0)
+                inicializarTablaTrabajos();
+    }//GEN-LAST:event_btnEliminarTrabajoActionPerformed
+
+//</editor-fold>//</editor-fold>
+
+
+    //############################################
+    //<editor-fold defaultstate="collapsed" desc="TRABAJO ADMINISTRAR EMPLEADOS">   
+
+
+
+
+    /**
+     * Recoge el trabajo seleccionado en la tabla de trabajos y si hay alguno seleccionado
+     * recoge su id e inicia la edicion de empleados asignados al trabajo
+     * @param evt 
+     */
+    private void btnGestionarEmpleadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGestionarEmpleadosActionPerformed
+        int filaSeleccionada = this.tblTrabajos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            return;//no hacer nada si no hay fila seleccionada
+        }        //Hace conversion segun el modelo de tabla
+        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
+        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
+        editarEmpleadosTrabajo(idTrabajo);
+
+    }//GEN-LAST:event_btnGestionarEmpleadosActionPerformed
+
+    /**
+     * Inicia la edicion de los empleados asignados a un trabajo
      * @param id Id del trabajo
      */
     private void editarEmpleadosTrabajo(int idTrabajo) {
@@ -236,44 +457,7 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
         lbNombreTrabajo.setText(trabajoSiendoEditado.getNombre()+" - "+trabajoSiendoEditado.getDescripcion());
 
     }
-
     
-    private void editarTrabajo(int id) {
-
-        this.trabajoSiendoEditado = (Trabajo)controlador.getTupla(1,id);
-        if (trabajoSiendoEditado == null) {
-            return;
-        }
-
-        CardLayout cl = (CardLayout) this.panelAccionesTrabajos.getLayout();
-        cl.show(panelAccionesTrabajos, "panelEditarTrabajo");
-        this.lbEditarIdTrabajo.setText(""+trabajoSiendoEditado.getID());
-        this.inputEditarNombreTrabajo.setText(trabajoSiendoEditado.getNombre());
-        this.inputEditarDescripcionTrabajo.setText(trabajoSiendoEditado.getDescripcion());
-        this.btnGuardarTrabajoNuevo.setEnabled(false);
-    }
-    
- 
-
- 
-
-    /**
-     * Recoge el trabajo seleccionado en la tabla de trabajos y si hay alguno seleccionado
-     * recoge su id e inicia la edicion del trabajo
-     * @param evt 
-     */
-    private void btnGestionarEmpleadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGestionarEmpleadosActionPerformed
-        int filaSeleccionada = this.tblTrabajos.getSelectedRow();
-        if (filaSeleccionada == -1) {
-            return;//no hacer nada si no hay fila seleccionada
-        }        //Hace conversion segun el modelo de tabla
-        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
-        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
-        editarEmpleadosTrabajo(idTrabajo);
-
-    }//GEN-LAST:event_btnGestionarEmpleadosActionPerformed
-
-
     /**
      * Desasigna un empleado de un trabajo
      * @param evt 
@@ -324,18 +508,18 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
      */
     private void habilitarFiltrado(){
         
-        //TODO manejar filtrado
-//        if (Controlador.getEmpleados().size()>0){
-//            for (Component c : panelFiltros.getComponents()){
-//                c.setEnabled(true);
-//            }
-//            if (busqueda.getText().length()==0)
-//                btnBuscarFiltro.setEnabled(false);
-//        }else{
-//            for (Component c : panelFiltros.getComponents()){
-//                c.setEnabled(false);
-//            }
-//        }
+
+        if (controlador.getAll(0).size()>0){
+            for (Component c : panelFiltros.getComponents()){
+                c.setEnabled(true);
+            }
+            if (busqueda.getText().length()==0)
+                btnBuscarFiltro.setEnabled(false);
+        }else{
+            for (Component c : panelFiltros.getComponents()){
+                c.setEnabled(false);
+            }
+        }
     }
     /**
      * Establece el filtro a usar por la tabla de empleados en funcion de lo 
@@ -627,6 +811,9 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
 
 //##########################################################
     //<editor-fold defaultstate="collapsed" desc="EMPLEADOS OPERACION MODIFICAR">  
+    /**
+     * Activa la opcion de poder modificar un empleado
+     */
     private void activarOpcionModificarEmpleado() {
         desactivarBotonesOperaciones();
         btnGuardarCambios.setEnabled(true);
@@ -805,49 +992,7 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
     //</editor-fold>
 //</editor-fold>
 
-//#############################################################
-//<editor-fold defaultstate="collapsed" desc="LISTENER TABLAS">
-    /*listener clic tablas*/
-    @Override
-    public void valueChanged(ListSelectionEvent e) {
 
-        //tabla trabajos
-        if (e.getSource().equals(tblTrabajos.getSelectionModel())) {
-            if (this.tblTrabajos.getSelectedRow() != -1) {
-                btnGestionarEmpleados.setEnabled(true);
-                btnEliminarTrabajo.setEnabled(true);
-                btnEditarTrabajo.setEnabled(true);
-            } else {
-                btnGestionarEmpleados.setEnabled(false);
-                btnEliminarTrabajo.setEnabled(false);
-                btnEditarTrabajo.setEnabled(false);
-            }
-        } //tabla empleados de trabajo
-        else if (e.getSource().equals(tblTrabajosEmpleados.getSelectionModel())) {
-            if (this.tblTrabajosEmpleados.getSelectedRow() != -1) {
-                btnDesasignar.setEnabled(true);
-            } else {
-                btnDesasignar.setEnabled(false);
-            }
-        } //tabla empleados
-        else if (e.getSource().equals(tblEmpleados.getSelectionModel())) {
-            int filaSeleccionada = this.tblEmpleados.getSelectedRow();
-            if (filaSeleccionada != -1) {
-                int filaCorrecta = this.tblEmpleados.convertRowIndexToModel(filaSeleccionada);
-                int idEmpleado = (int) this.tblEmpleados.getModel().getValueAt(filaCorrecta, 0);
-                empleadoSeleccionado(idEmpleado);
-                if (operacionesActivadas) {
-                    activarOperaciones();
-                }
-            } else {
-                empleadoSiendoEditado=null;
-                vaciarFichaEmpleado();
-                deshabilitarFichaEmpleado();
-                desactivarOperaciones();
-            }
-        }
-    }
-//</editor-fold>
 
 //####################################################################
 //<editor-fold defaultstate="collapsed" desc="MENSAJES INFORMACION">
@@ -859,6 +1004,11 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
         JOptionPane.showMessageDialog(this, msg, "error", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /**
+     * Muestra un mensaje de confirmacion
+     * @param msg
+     * @return 
+     */
     private boolean confirmar(String msg) {
         Object[] opciones = {"Sí", "No"};
         return JOptionPane.showOptionDialog(this,
@@ -870,6 +1020,23 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
                 opciones,
                 "default") == JOptionPane.YES_OPTION;
     }
+
+    /**
+     * Muestra el aviso de desconexion con un texto
+     * @param texto 
+     */
+    void mostrarAvisoDesconexion(String texto) {
+        panelDesconexion.setVisible(true);
+        etiquetaDesconexion.setText(texto);
+    }
+    
+    /**
+     * Oculta el aviso de desconexion
+     */
+    void ocultarAvisoDesconexion() {
+        panelDesconexion.setVisible(false);
+    }
+	
 //</editor-fold>
 
     /**
@@ -1407,7 +1574,7 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
                 .addContainerGap())
         );
 
-        lbBuscarPor.setText("Buscar por:");
+        lbBuscarPor.setText("Filtrar por:");
 
         rgFiltro.add(rbFiltroApellido);
         rbFiltroApellido.setSelected(true);
@@ -1891,90 +2058,6 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void miDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miDesconectarActionPerformed
-        desconectar();
-    }//GEN-LAST:event_miDesconectarActionPerformed
-
-    public void desconectar(){
-                    if (controlador.desconectar()){
-            miConectar.setEnabled(true);
-            miDesconectar.setEnabled(false);
-            miTrabajos.setEnabled(false);
-            miEmpleados.setEnabled(false);
-            panelEstado.setBackground(Color.WHITE);
-             lbDatosConexion.setText("Desconectado");
-                         CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
-            cl.show(panelCardsGeneral, "panelGeneralTrabajos");
-            autodesconexion.setConectado(false);
-            cl.show(panelCardsGeneral, "panelDesconectado");
-        }}
-    private void miConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miConectarActionPerformed
-        if (controlador.conectar()){
-            miConectar.setEnabled(false);
-            miDesconectar.setEnabled(true);
-            miTrabajos.setEnabled(true);
-            miEmpleados.setEnabled(true);
-            panelEstado.setBackground(new Color(153,202,153));
-            lbDatosConexion.setText("Conectado: "+controlador.getDatosConexion());
-            //inicializar tablas
-            inicializarTablaTrabajos();
-            CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
-            cl.show(panelCardsGeneral, "panelGeneralTrabajos");
-            panelEstado.setToolTipText("Conectado");
-            autodesconexion.setConectado(true);
-        }else{
-            lbDatosConexion.setText("Desconectado");
-            panelEstado.setBackground(Color.RED);  
-            CardLayout cl = (CardLayout) this.panelCardsGeneral.getLayout();
-            cl.show(panelCardsGeneral, "panelDesconectado");
-            panelEstado.setToolTipText(controlador.getUltimoError());
-        }
-        
-    }//GEN-LAST:event_miConectarActionPerformed
-
-    private void btnEliminarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarTrabajoActionPerformed
-       int filaSeleccionada = this.tblTrabajos.getSelectedRow();
-        if (filaSeleccionada == -1) {
-            return;//no hacer nada si no hay fila seleccionada
-        }        //Hace conversion segun el modelo de tabla
-        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
-        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
-        if (controlador.delete(1,""+idTrabajo)>0)
-            inicializarTablaTrabajos();
-    }//GEN-LAST:event_btnEliminarTrabajoActionPerformed
-
-    private void inputEditarNombreTrabajoKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputEditarNombreTrabajoKeyReleased
-        String txt = this.inputEditarNombreTrabajo.getText();
-        if (txt == null || !txt.equals( ""))
-            this.btnGuardarEditarTrabajo.setEnabled(true);
-        else
-            this.btnGuardarEditarTrabajo.setEnabled(false);
-    }//GEN-LAST:event_inputEditarNombreTrabajoKeyReleased
-
-    private void btnGuardarEditarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarEditarTrabajoActionPerformed
-        String id = ""+trabajoSiendoEditado.getID();
-        String nombre = inputEditarNombreTrabajo.getText();
-        String descripcion = inputEditarDescripcionTrabajo.getText();
-        if (nombre.length() > 0) {
-            String[] valores={id,nombre,descripcion};
-            if(controlador.update(1,valores)>0);
-                msgInfo("Trabajo actualizado");
-            this.inicializarTablaTrabajos();
-        }
-    }//GEN-LAST:event_btnGuardarEditarTrabajoActionPerformed
-
-    private void btnEditarTrabajoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarTrabajoActionPerformed
-               int filaSeleccionada = this.tblTrabajos.getSelectedRow();
-        if (filaSeleccionada == -1) {
-            return;//no hacer nada si no hay fila seleccionada
-        }        //Hace conversion segun el modelo de tabla
-        int filaCorrecta = this.tblTrabajos.convertRowIndexToModel(filaSeleccionada);
-        int idTrabajo = (int) this.tblTrabajos.getValueAt(filaCorrecta, 0);
-        editarTrabajo(idTrabajo);
-        btnGuardarEditarTrabajo.setEnabled(true);
-        
-    }//GEN-LAST:event_btnEditarTrabajoActionPerformed
-
 
     // <editor-fold defaultstate="collapsed" desc="ATRIBUTOS AUTOGENERADOS">  
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -2071,14 +2154,7 @@ public class Vista extends javax.swing.JFrame implements ListSelectionListener {
     private javax.swing.JScrollPane tblTrabajosScroll;
     // End of variables declaration//GEN-END:variables
 
-    void mostrarAvisoDesconexion(String texto) {
-        panelDesconexion.setVisible(true);
-        etiquetaDesconexion.setText(texto);
-    }
-
 // </editor-fold>     
 
-    void ocultarAvisoDesconexion() {
-        panelDesconexion.setVisible(false);
-    }
+
 }//fin de clase

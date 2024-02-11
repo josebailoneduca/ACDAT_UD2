@@ -6,8 +6,6 @@ Lista de paquetes:
  */
 package ud2_03.controlador.dto;
 
-import java.util.ArrayList;
-
 /**
  * DTO Trabajo
  *
@@ -30,8 +28,8 @@ public class Trabajo {
     /**
      * Constructor
      * @param ID
-     * @param numero
-     * @param nombre 
+     * @param nombre
+     * @param descripcion 
      */
     
     public Trabajo(int ID, String nombre, String descripcion) {

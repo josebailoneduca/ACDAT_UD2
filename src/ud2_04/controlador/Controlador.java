@@ -9,12 +9,12 @@ package ud2_04.controlador;
 import java.util.ArrayList;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.ResultSetMetaData;
 import ud2_04.controlador.dto.Empleado;
 import ud2_04.controlador.dto.Trabajo;
 import ud2_04.controlador.dto.TrabajoEmpleado;
 import ud2_04.gui.ventanas.Vista;
 import ud2_04.modelo.Modelo;
- 
 
 /**
  * Clase lógica
@@ -23,9 +23,6 @@ import ud2_04.modelo.Modelo;
  */
 public class Controlador {
 
- 
-
-
     //ATRIBUTOS
     //datos de conexion
     private String driver;
@@ -33,11 +30,11 @@ public class Controlador {
     private String user;
     private String password;
     private String baseDatos;
-    
+
     //referencias a modelo y vista
     private Modelo modelo;
     private Vista vista;
-    
+
     //lista de nombres de las tablas
     private ArrayList<String> lisTb = new ArrayList<String>();
     //matriz de nombres de las columnas (fila indica la tabla, columna el nombre de la columna)
@@ -45,64 +42,62 @@ public class Controlador {
     //matriz de tipos de dato de las columnas
     private ArrayList<ArrayList<Integer>> lisTipo = new ArrayList<ArrayList<Integer>>();
 
-    
-    
     /**
      * Constructor con los datos de conexion y las referencias a vista y modelo
+     *
      * @param driver
      * @param url
      * @param user
      * @param password
      * @param baseDatos
      * @param vista
-     * @param modelo 
+     * @param modelo
      */
-    public Controlador(String driver, String url, String user, String password, String baseDatos, Vista vista,Modelo modelo) {
-        this.driver=driver;
-        this.url=url;
+    public Controlador(String driver, String url, String user, String password, String baseDatos, Vista vista, Modelo modelo) {
+        this.driver = driver;
+        this.url = url;
         this.user = user;
         this.password = password;
         this.baseDatos = baseDatos;
         this.vista = vista;
-        this.modelo = new Modelo();   
+        this.modelo = new Modelo();
         this.conectar();
     }
-     
-        /**
+
+    /**
      * Devuelve un array de string con los nombres de las tablas
-     * 
+     *
      * @param ind Indice de la tabla
-     * 
-     * @return  Array con los nombres de las columnas
+     *
+     * @return Array con los nombres de las columnas
      */
     public String[] getTablas() {
         return lisTb.toArray(new String[0]);
     }
-    
-    
+
     /**
      * Devuelve un array de string con los nombres de las columnas de una tabla
-     * 
+     *
      * @param ind Indice de la tabla
-     * 
-     * @return  Array con los nombres de las columnas
+     *
+     * @return Array con los nombres de las columnas
      */
     public String[] getColumnas(int ind) {
         return lisCol.get(ind).toArray(new String[0]);
     }
-    
+
     /**
      * Devuelve un array de string con los tipos de las columnas de una tabla
-     * 
+     *
      * @param ind Indice de la tabla
-     * 
-     * @return  Array con los nombres de las columnas
+     *
+     * @return Array con los nombres de las columnas
      */
     public int[] getTipos(int ind) {
         return lisTipo.get(ind).stream().mapToInt(i -> i).toArray();
     }
 
-     /**
+    /**
      * Devuevle una lista de objetos conteniendo todo el contenido de una tabla.
      * El tipo de objeto lo determina el indice de la tabla
      *
@@ -118,31 +113,39 @@ public class Controlador {
                 //recoger los datos del resultset
                 while (rs.next()) {
                     switch (tabla) {
-                        case 0 -> {items.add(crearEmpleadoDeResult(rs));}
-                        case 1 -> {items.add(crearTrabajoDeResultSet(rs));}
-                        case 2 -> {items.add(crearTrabajoEmpleadosDeResultSet(rs));}
-                        default -> throw new AssertionError();
+                        case 0 -> {
+                            items.add(crearEmpleadoDeResult(rs));
+                        }
+                        case 1 -> {
+                            items.add(crearTrabajoDeResultSet(rs));
+                        }
+                        case 2 -> {
+                            items.add(crearTrabajoEmpleadosDeResultSet(rs));
+                        }
+                        default ->
+                            throw new AssertionError();
                     }
                 }
             } catch (SQLException ex) {
-                vista.msgError("Error recogiendo de la tabla "+lisTb.get(tabla));
+                vista.msgError("Error recogiendo de la tabla " + lisTb.get(tabla));
                 return null;
             }
             //si el rs es nulo    
         } else {
-            vista.msgError("Error recogiendo de la tabla "+lisTb.get(tabla));
+            vista.msgError("Error recogiendo de la tabla " + lisTb.get(tabla));
             return null;
         }
         return items;
     }
-    
-     /**
-     * Devuelve la lista de objetos con los datos de tuplas de una tabla donde la columna indicada tiene el valor indicado
-     * El tipo de objeto lo determina el indice de la tabla
-     * 
+
+    /**
+     * Devuelve la lista de objetos con los datos de tuplas de una tabla donde
+     * la columna indicada tiene el valor indicado El tipo de objeto lo
+     * determina el indice de la tabla
+     *
      * @return La lista de tuplas
      */
-    public ArrayList<Object> getTuplas(int tabla,int col, String valor) {
+    public ArrayList<Object> getTuplas(int tabla, int col, String valor) {
 
         ArrayList<Object> items = new ArrayList<Object>();
         ResultSet rs = modelo.select(lisTb.get(tabla), lisCol.get(tabla).get(col), valor);
@@ -152,82 +155,91 @@ public class Controlador {
                 //recoger los datos del resultset
                 while (rs.next()) {
                     switch (tabla) {
-                        case 0 -> {items.add(crearEmpleadoDeResult(rs));}
-                        case 1 -> {items.add(crearTrabajoDeResultSet(rs));}
-                        case 2 -> {items.add(crearTrabajoEmpleadosDeResultSet(rs));}
-                        default -> throw new AssertionError();
+                        case 0 -> {
+                            items.add(crearEmpleadoDeResult(rs));
+                        }
+                        case 1 -> {
+                            items.add(crearTrabajoDeResultSet(rs));
+                        }
+                        case 2 -> {
+                            items.add(crearTrabajoEmpleadosDeResultSet(rs));
+                        }
+                        default ->
+                            throw new AssertionError();
                     }
                 }
             } catch (SQLException ex) {
-                vista.msgError("Error recogiendo de la tabla "+lisTb.get(tabla));
+                vista.msgError("Error recogiendo de la tabla " + lisTb.get(tabla));
                 return null;
             }
             //si el rs es nulo    
         } else {
-            vista.msgError("Error recogiendo de la tabla "+lisTb.get(tabla));
+            vista.msgError("Error recogiendo de la tabla " + lisTb.get(tabla));
             return null;
         }
         return items;
     }
-    
- 
 
     /**
      * Devuelve una tupla asumiento que la key es la primera key
-     * 
+     *
      * @param tabla indice de la tabla
      * @param ID valor que debe tener la id
-     * @return  La tupla encontrada o null si no existe
+     * @return La tupla encontrada o null si no existe
      */
     public Object getTupla(int tabla, int ID) {
 
-            try {
-                ResultSet rs = modelo.select(lisTb.get(tabla), lisCol.get(tabla).get(0), "" + ID);
-                if (rs != null && rs.next()) {
-                    //recoger primer resultado del resultset
-                    switch (tabla) {
-                        case 0 -> {return crearEmpleadoDeResult(rs);}
-                        case 1 -> {return crearTrabajoDeResultSet(rs);}
-                        case 2 -> {}
-                        default -> throw new AssertionError();
+        try {
+            ResultSet rs = modelo.select(lisTb.get(tabla), lisCol.get(tabla).get(0), "" + ID);
+            if (rs != null && rs.next()) {
+                //recoger primer resultado del resultset
+                switch (tabla) {
+                    case 0 -> {
+                        return crearEmpleadoDeResult(rs);
                     }
-                } else {
-                    return null;
+                    case 1 -> {
+                        return crearTrabajoDeResultSet(rs);
+                    }
+                    case 2 -> {
+                    }
+                    default ->
+                        throw new AssertionError();
                 }
-            } catch (SQLException ex) {
+            } else {
                 return null;
             }
+        } catch (SQLException ex) {
             return null;
+        }
+        return null;
     }
 
- 
-
     /**
-     * Inserta en una tabla presuponiendo que la primera columna como la key 
-     * 
+     * Inserta en una tabla presuponiendo que la primera columna como la key
+     *
      * @param tabla Indice de la tabla
      * @param valores multiples parametros con los valores
-     * 
-     * @return  El resultado de la insercion
+     *
+     * @return El resultado de la insercion
      */
-    public int insert(int tabla,String... valores) {
+    public int insert(int tabla, String... valores) {
         //recoger lista de columnas
-        String[] col = new String[lisCol.get(tabla).size()-1];
-        for(int i=1;i<lisCol.get(tabla).size();i++){
-            col[i-1]=lisCol.get(tabla).get(i);
+        String[] col = new String[lisCol.get(tabla).size() - 1];
+        for (int i = 1; i < lisCol.get(tabla).size(); i++) {
+            col[i - 1] = lisCol.get(tabla).get(i);
         }
         //ejecutar la insercion
-        return modelo.insert(lisTb.get(tabla), col,valores );
+        return modelo.insert(lisTb.get(tabla), col, valores);
     }
 
     /**
      * Borra de una tabla indicada donde la key tenga el valor indicado.
      * Presupone que la key es la primera columna
-     * 
+     *
      * @param ind_tab Indice de la tabla
      * @param valor Valor de la key para la tupla a borrar
-     * 
-     * @return  El resultado del borrado
+     *
+     * @return El resultado del borrado
      */
     public int delete(int ind_tab, String valor) {
         //ejecutar borrado
@@ -235,24 +247,22 @@ public class Controlador {
         return resultado;
     }
 
-    
     /**
-     * Actualiza los datos de una tabla presuponiendo que la key es la primera columna
-     * 
+     * Actualiza los datos de una tabla presuponiendo que la key es la primera
+     * columna
+     *
      * @param tabla Indice de la tabla
      * @param valores Valores a actualizar
-     * 
-     * @return  El resultado del update
+     *
+     * @return El resultado del update
      */
-    public int update(int tabla,String... valores) {
+    public int update(int tabla, String... valores) {
         //recoger nombres de las tablas
         String[] col = lisCol.get(tabla).toArray(new String[0]);
         //update en tabla, con campos col, valores , key col[0] == valores[0]
-        return modelo.update(lisTb.get(tabla), col, valores,col[0], valores[0]);
+        return modelo.update(lisTb.get(tabla), col, valores, col[0], valores[0]);
     }
-  
 
-    
     /**
      * Salir del programa
      */
@@ -263,21 +273,24 @@ public class Controlador {
 
     /**
      * Conecta a la base de datosy devuelve el resultado del intento de conexion
-     * 
-     * @return  True si ha conectado, false si no lo ha hecho
+     *
+     * @return True si ha conectado, false si no lo ha hecho
      */
     public boolean conectar() {
-        
+
         //conectar
-        boolean conectado = modelo.conectar(driver, url,  user,  password,  baseDatos);
-        
+        boolean conectado = modelo.conectar(driver, url, user, password, baseDatos);
+
         //recoger valores de tablas y nombres de columnas
         if (conectado) {
             lisTb = modelo.litstaTablas();
             lisCol = new ArrayList<ArrayList<String>>();
+            lisTipo = new ArrayList<ArrayList<Integer>>();
             for (String tabla : lisTb) {
                 ArrayList<String> cols = modelo.listaColumnas(tabla);
                 lisCol.add(cols);
+                ArrayList<Integer> tipos = modelo.listaTipos(tabla);
+                lisTipo.add(tipos);
             }
         } else {
             vista.msgError("Error conectando\n" + modelo.getUltimoError());
@@ -287,7 +300,7 @@ public class Controlador {
 
     /**
      * Desconectar de la base de datos
-     * 
+     *
      * @return True exito, false fracaso
      */
     public boolean desconectar() {
@@ -295,11 +308,10 @@ public class Controlador {
         return desconectado;
     }
 
-    
     /**
      * Devuelve un string formado por los datos de conexion
-     * 
-     * @return  El string con los datos
+     *
+     * @return El string con los datos
      */
     public String getDatosConexion() {
         String SGBD = modelo.getSGBD();
@@ -309,10 +321,9 @@ public class Controlador {
         return "Usuario: " + USER + "  Host:" + URL + " - " + SGBD;
     }
 
-    
     /**
      * Crea un objeto Trabajo a partir de un resultset
-     * 
+     *
      * @param rs El resultset
      * @return El objeto formado
      */
@@ -325,7 +336,7 @@ public class Controlador {
             ID = rs.getInt(col.get(0));
             String nombre = rs.getString(col.get(1));
             String descripcion = rs.getString(col.get(2));
-            
+
             //construir y devolver el objeto
             return new Trabajo(ID, nombre, descripcion);
         } catch (SQLException ex) {
@@ -333,17 +344,15 @@ public class Controlador {
         }
     }
 
-
-
     /**
      * Crea un objeto Empleado a partir de un resultset
-     * 
+     *
      * @param rs El resultset
      * @return El objeto formado
      */
     private Object crearEmpleadoDeResult(ResultSet rs) {
         //recoger nombres de columnas
-         ArrayList<String> col = lisCol.get(0);
+        ArrayList<String> col = lisCol.get(0);
         int ID;
         try {
             //recoger datos del resultset
@@ -352,7 +361,7 @@ public class Controlador {
             String apellidos = rs.getString(col.get(2));
             String DNI = rs.getString(col.get(3));
             double sueldo = rs.getDouble(col.get(4));
-            
+
             //construir y devolver el empleado
             return new Empleado(ID, nombre, apellidos, DNI, sueldo);
         } catch (SQLException ex) {
@@ -362,7 +371,7 @@ public class Controlador {
 
     /**
      * Crea un objeto TrabajoEmpleado a partir de un resultset
-     * 
+     *
      * @param rs El resultset
      * @return El objeto formado
      */
@@ -377,19 +386,105 @@ public class Controlador {
             ID = rs.getInt(col.get(0));
             IDtrabajo = rs.getInt(col.get(1));
             IDempleado = rs.getInt(col.get(2));
-           
+
             //construir y devolver el objeto
             return new TrabajoEmpleado(ID, IDtrabajo, IDempleado);
         } catch (SQLException ex) {
             return null;
-        }    }
+        }
+    }
 
     /**
      * Devuelve el último error registrado en el modelo
-     * @return  El error
+     *
+     * @return El error
      */
     public String getUltimoError() {
         return modelo.getUltimoError();
     }
 
+    public String[] getOperaciones(int tipo) {
+        String[] numeros = {"=", "<>", "<", ">", "<=", ">="};
+        String[] texto = {"LIKE", "=", "<>", "<", ">", "<=", ">="};
+
+        switch (tipo) {
+            case java.sql.Types.INTEGER:
+            case java.sql.Types.DOUBLE:
+            case java.sql.Types.BIGINT:
+            case java.sql.Types.DECIMAL:
+            case java.sql.Types.FLOAT:
+            case java.sql.Types.NUMERIC:
+            case java.sql.Types.REAL:
+            case java.sql.Types.SMALLINT:
+            case java.sql.Types.TINYINT:
+                return numeros;
+            case java.sql.Types.CHAR:
+            case java.sql.Types.LONGNVARCHAR:
+            case java.sql.Types.LONGVARCHAR:
+            case java.sql.Types.NCHAR:
+            case java.sql.Types.NVARCHAR:
+            case java.sql.Types.VARCHAR:
+                return texto;
+            default:
+                return numeros;
+
+        }
+    }
+
+    public boolean ponerComillas(int tipo) {
+
+        switch (tipo) {
+            case java.sql.Types.INTEGER:
+            case java.sql.Types.DOUBLE:
+            case java.sql.Types.BIGINT:
+            case java.sql.Types.DECIMAL:
+            case java.sql.Types.FLOAT:
+            case java.sql.Types.NUMERIC:
+            case java.sql.Types.REAL:
+            case java.sql.Types.SMALLINT:
+            case java.sql.Types.TINYINT:
+                return false;
+            case java.sql.Types.CHAR:
+            case java.sql.Types.LONGNVARCHAR:
+            case java.sql.Types.LONGVARCHAR:
+            case java.sql.Types.NCHAR:
+            case java.sql.Types.NVARCHAR:
+            case java.sql.Types.VARCHAR:
+                return true;
+            default:
+                return true;
+
+        }
+    }
+
+    public ArrayList<ArrayList<String>> ejecutarSentencia(String sentencia) {
+        ArrayList<ArrayList<String>> datosTabla = new ArrayList<ArrayList<String>>();
+        ResultSet rs = modelo.ejecutarSentencia(sentencia);
+        if (rs != null) {
+            //si hay resulset
+            try {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int nCol = rsmd.getColumnCount();
+                ArrayList<String> nombres = new ArrayList<String>();
+                for (int i = 0; i < nCol; i++) {
+                    nombres.add(rsmd.getColumnName(i));
+                }
+                datosTabla.add(nombres);
+                //recoger los datos del resultset
+                while (rs.next()) {
+                    ArrayList<String> tupla = new ArrayList<String>();
+                    for (int j = 0; j < nCol; j++) {
+                        tupla.add(rs.getString(j));
+                    }
+                    datosTabla.add(tupla);
+                }
+
+                //construir y devolver el objeto
+                return datosTabla;
+            } catch (SQLException ex) {
+                return null;
+            }
+        }
+        return datosTabla;
+    }
 }

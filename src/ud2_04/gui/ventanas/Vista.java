@@ -7,6 +7,12 @@ Lista de paquetes:
 
 package ud2_04.gui.ventanas;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import ud2_04.controlador.Controlador;
 
@@ -14,7 +20,7 @@ import ud2_04.controlador.Controlador;
  *
  * @author Jose Javier Bailon Ortiz
  */
-public class Vista extends javax.swing.JFrame {
+public class Vista extends javax.swing.JFrame implements ActionListener,KeyListener{
 
     private Controlador controlador;
 
@@ -34,7 +40,8 @@ public class Vista extends javax.swing.JFrame {
         initPropio();
     }
     private void initPropio() {
-        
+        eventos();
+        actualizarTablas();
     }
      public void msgError(String msg) {
         JOptionPane.showMessageDialog(this, msg, "error", JOptionPane.ERROR_MESSAGE);
@@ -89,11 +96,16 @@ public class Vista extends javax.swing.JFrame {
 
         lbTablas.setText("Tablas:");
 
+        inputTablas.setActionCommand("tablas");
+
         lbColumnas.setText("Columnas:");
 
         inputColumnas.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " " }));
+        inputColumnas.setActionCommand("columnas");
 
         lbOperador.setText("Operador:");
+
+        inputOperador.setActionCommand("operador");
 
         lbValor.setText("Valor:");
 
@@ -142,6 +154,7 @@ public class Vista extends javax.swing.JFrame {
         );
 
         btnEjecutar.setText("Ejecutar");
+        btnEjecutar.setActionCommand("ejecutar");
 
         tabla.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -201,6 +214,80 @@ public class Vista extends javax.swing.JFrame {
     private javax.swing.JScrollPane scrollTabla;
     private javax.swing.JTable tabla;
     // End of variables declaration//GEN-END:variables
+
+    private void eventos() {
+        inputTablas.addActionListener(this);
+        inputColumnas.addActionListener(this);
+        inputOperador.addActionListener(this);
+        btnEjecutar.addActionListener(this);
+        inputValor.addKeyListener(this);
+        
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String ac = e.getActionCommand();
+        switch (ac) {
+            case "tablas" -> actualizarColumnas();
+            case "columnas" -> actualizarOperador();
+            case "operador" -> actualizarSentencia();
+            case "ejecutar" -> ejecutarSentencia();
+            default -> throw new AssertionError();
+        }
+    }
+    private void actualizarTablas() {
+        String[] tablas = controlador.getTablas();
+        inputTablas.setModel(new DefaultComboBoxModel<>( tablas ));
+        inputTablas.setSelectedIndex(0);
+    }
+    private void actualizarColumnas() {
+        String[] columnas = controlador.getColumnas(inputTablas.getSelectedIndex());
+        inputColumnas.setModel(new DefaultComboBoxModel<>( columnas ));
+        inputColumnas.setSelectedIndex(0);
+    }
+
+    private void actualizarOperador() {
+        getTipo();
+        int tbl=inputTablas.getSelectedIndex();
+        int columna=inputColumnas.getSelectedIndex();
+        int[] tipos = controlador.getTipos(tbl);
+        String[] operadores = controlador.getOperaciones(getTipo());
+        inputOperador.setModel(new DefaultComboBoxModel<>( operadores ));
+        inputOperador.setSelectedIndex(0);
+    }
+
+    private void actualizarSentencia() {
+        String tbl=inputTablas.getSelectedItem().toString();
+        String col=inputColumnas.getSelectedItem().toString();
+        String oper=inputOperador.getSelectedItem().toString();
+        String comilla=(controlador.ponerComillas(getTipo()))?"`":"";
+        String valor = inputValor.getText();
+        inputSentencia.setText("SELECT * FROM `"+tbl+"` WHERE `"+col+"` "+oper+" "+comilla+valor+comilla+";" );
+    }
+
+    private int getTipo() {
+        int tbl=inputTablas.getSelectedIndex();
+        int columna=inputColumnas.getSelectedIndex();
+        int[] tipos = controlador.getTipos(tbl);
+        return tipos[columna];
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        actualizarSentencia();
+    }
+
+    private void ejecutarSentencia() {
+        ArrayList<ArrayList<String>> resultado = controlador.ejecutarSentencia(inputSentencia.getText());
+    }
 
 
 

@@ -12,6 +12,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
+
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -304,6 +306,16 @@ public class Modelo {
      */
     public int update(String tabla, String[] campos, String[] valores, String campoClave, String valorClave) {
         return Update.updateWhere(conexion, tabla, campos, valores, campoClave, valorClave);
+    }
+
+    public ResultSet ejecutarSentencia(String sentencia) {
+            PreparedStatement ps;
+        try {
+            ps = conexion.prepareStatement(sentencia);
+           return ps.executeQuery();    
+        } catch (SQLException ex) {
+            return null;
+        }
     }
 
 

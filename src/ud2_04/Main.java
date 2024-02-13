@@ -6,25 +6,24 @@ Lista de paquetes:
  */
 package ud2_04;
 
+import java.util.HashMap;
+import javax.swing.JOptionPane;
 import ud2_04.controlador.Controlador;
 import ud2_04.gui.ventanas.Vista;
+import ud2_04.gui.dialogos.DialogoDatosConexion;
 import ud2_04.modelo.Modelo;
 
- 
 /**
  *
  * @author Jose Javier BO
  */
 public class Main {
-
-    //Datos de conexion a la base de datos
-    private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String HOST = "localhost";
-    private static final int PUERTO = 3306;
-    private static final String URL = "jdbc:mysql://" + HOST + ":" + PUERTO + "/";
-    private static final String USER = "root";
-    private static final String PASSWORD = "";
-    private static final String BASE_DATOS = "trabajosempleados";
+    private static DialogoDatosConexion dialogo;
+    private static boolean pedir = true;
+    private static String DRIVER;
+    private static String URL;
+    private static String USER;
+    private static String PASSWORD;
 
     public static void main(String[] args) {
 
@@ -54,12 +53,40 @@ public class Main {
         //</editor-fold>
         //</editor-fold>
 
+        while (pedir) {
+            HashMap<String, String> dCon = pedirDatos();
+            if (dCon != null) {
+                DRIVER=dCon.get("DRIVER");
+                URL=dCon.get("URL");
+                USER=dCon.get("USER");
+                PASSWORD=dCon.get("PASSWORD");
+                if(conexionOk())
+                    pedir=false;
+                else
+                    JOptionPane.showMessageDialog(null, "No se puede conectar");
+            } else {
+                System.exit(0);
+            }
+        }
         Vista vista = new Vista();
         vista.setLocationRelativeTo(null);
         vista.setVisible(true);
         Modelo modelo = new Modelo();
-        
-        Controlador controlador = new Controlador(DRIVER, URL, USER, PASSWORD, BASE_DATOS, vista, modelo);
+
+        Controlador controlador = new Controlador(DRIVER, URL, USER, PASSWORD, vista, modelo);
         vista.setControlador(controlador);
+    }
+
+    private static HashMap<String, String> pedirDatos() {
+        if(dialogo==null)
+            dialogo = new DialogoDatosConexion(null, true);
+
+        dialogo.setLocationRelativeTo(null);
+        dialogo.mostrar();
+        return dialogo.getDatos();
+    }
+
+    private static boolean conexionOk() {
+        return Modelo.testConexion(DRIVER,URL,USER,PASSWORD);
     }
 }

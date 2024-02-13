@@ -47,14 +47,14 @@ public class Modelo {
      *
      * @return True si conecta. False si no conecta
      */
-    public boolean conectar(String driver, String url, String user, String password, String baseDatos) {
+    public boolean conectar(String driver, String url, String user, String password) {
   
         try {
             //asegurar carga del driver
             Class.forName(driver);//Nombre del driver
 
             //iniciar conexion
-            conexion = DriverManager.getConnection(url + baseDatos, user, password);
+            conexion = DriverManager.getConnection(url, user, password);
         } catch (ClassNotFoundException | SQLException ex) {
             ultimoError = ex.getMessage();
             return false;
@@ -230,16 +230,7 @@ public class Modelo {
         return true;
     }//end desconectar
 
-    /**
-     * Devuelve el ultimo error registrado
-     *
-     * @return El mensaje del error
-     */
-    public String getUltimoError() {
-        return ultimoError;
-    }
-
-    //OPERACIONES
+    
     /**
      * Selecciona todos los elementos de la tabla
      *
@@ -250,73 +241,41 @@ public class Modelo {
     public ResultSet select(String tabla) {
         return Select.selectAll(conexion, tabla);
     }
-
+    
     /**
-     * Select WHERE tal que campo=valor
+     * Devuelve el ultimo error registrado
      *
-     * @param tabla Nombre de la tabla
-     * @param campo Campo para la condicion
-     * @param valor Valor para la condicion
-     *
-     * @return El resultset
+     * @return El mensaje del error
      */
-    public ResultSet select(String tabla, String campo, String valor) {
-        return Select.selectWhere(conexion, tabla, campo, valor);
+    public String getUltimoError() {
+        return ultimoError;
     }
 
-    /**
-     * Inserta un registro en la tabla suministrada usando los campos y valores
-     * suministrados
-     *
-     * @param tabla Nombre de la tabla
-     * @param campos Listado de nombres de columnas
-     * @param valores Listado de valores
-     * @return 1 si ha insertado -1 si no ha insertado y -2 si no ha insertado
-     * por ser DNI duplicado
-     */
-    public int insert(String tabla, String[] campos, String[] valores) {
-        return Insert.insert(conexion, tabla, campos, valores);
-    }
-
-    /**
-     * Borra tuplas de una tabla tal que campo=valor
-     *
-     * @param tabla Nombre de la tabla
-     * @param campo Nombre del campo para la condicion
-     * @param valor Valor para la condicion
-     *
-     * @return 0 si no ha borrado, >0 si ha borrado, -1 si ha habido un error
-     */
-    public int delete(String tabla, String campo, String valor) {
-        return Delete.deleteWhere(conexion, tabla, campo, valor);
-    }
-
-    /**
-     * Actualiza los valores de las tuplas de la tabla especificada segun los
-     * campos y valore especificados
-     *
-     * @param tabla Nombre de la tabla
-     * @param campos Lista de nombres de los campos a actualizar
-     * @param valores Lista de valores a asignar
-     * @param campoClave Nombre del campo de la condicion
-     * @param valorClave Valor de la condicion
-     *
-     * @return 0 si no ha actualizado, >0 si ha actualizado, -1 si ha habido
-     * altun error
-     */
-    public int update(String tabla, String[] campos, String[] valores, String campoClave, String valorClave) {
-        return Update.updateWhere(conexion, tabla, campos, valores, campoClave, valorClave);
-    }
-
+ 
     public ResultSet ejecutarSentencia(String sentencia) {
             PreparedStatement ps;
         try {
             ps = conexion.prepareStatement(sentencia);
            return ps.executeQuery();    
         } catch (SQLException ex) {
+            this.ultimoError=ex.getMessage();
             return null;
         }
     }
 
+
+    public static boolean testConexion(String DRIVER, String URL, String USER, String PASSWORD) {
+  
+        try {
+            //asegurar carga del driver
+            Class.forName(DRIVER);//Nombre del driver
+
+            //iniciar conexion
+            DriverManager.getConnection(URL, USER, PASSWORD);
+        } catch (ClassNotFoundException | SQLException ex) {
+            return false;
+        }
+        return true;
+    }
 
 }
